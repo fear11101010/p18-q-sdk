@@ -88,6 +88,7 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         } else {
             throw new CardNotFoundException("No Card Detected. Please tap card");
         }
+
     }
 
     public int readCard(DataInterface dataInterface) throws Exception {
@@ -332,12 +333,12 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
 
     @Override
     public int writeInCard(int serviceNum, byte[] serviceList, int blockNum, byte[] blockList, byte[] blockData) throws Exception {
-        int ret = mutualAuthV2WithFeliCa((byte) serviceNum, serviceList);
-        if (ret == 0) {
-            return 0;
-        }
+//        int ret = mutualAuthV2WithFeliCa((byte) serviceNum, serviceList);
+//        if (ret == 0) {
+//            return 0;
+//        }
 //        long st = System.currentTimeMillis();
-         ret = writeBlockData(blockNum, blockNum * 2, blockList, blockData);
+          int ret = writeBlockData(blockNum, blockNum * 2, blockList, blockData);
 //        int ret = writeBlockData(blockNum, blockNum * 2, blockList, blockData);
         if (ret == 0) {
             return 0;
