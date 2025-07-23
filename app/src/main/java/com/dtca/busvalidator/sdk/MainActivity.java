@@ -2,6 +2,8 @@ package com.dtca.busvalidator.sdk;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
 
 import com.dtca.busvalidator.busvalidatorsdk.FelicaCard;
 import com.dtca.busvalidator.busvalidatorsdk.Sam;
@@ -10,35 +12,12 @@ import com.dtca.busvalidator.busvalidatorsdk.model.RideAndAlight;
 import com.dtca.busvalidator.busvalidatorsdk.model.TransactionData;
 import com.dtca.busvalidator.busvalidatorsdk.model.exception.SamSyntaxError;
 import com.dtca.busvalidator.busvalidatorsdk.model.interfac.DataInterface;
-import com.google.android.material.snackbar.Snackbar;
-
-import androidx.appcompat.app.AppCompatActivity;
-
-import android.os.Handler;
-import android.os.Looper;
-import android.speech.tts.TextToSpeech;
-import android.util.Log;
-import android.view.View;
-
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
-import androidx.navigation.fragment.NavHostFragment;
-import androidx.navigation.ui.AppBarConfiguration;
-import androidx.navigation.ui.NavigationUI;
-
-import com.dtca.busvalidator.sdk.databinding.ActivityMainBinding;
 import com.google.gson.Gson;
-
-import android.view.Menu;
-import android.view.MenuItem;
-import android.widget.Button;
 
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
-import java.util.Locale;
-import java.util.Objects;
 import java.util.concurrent.Executors;
 
 import javax.crypto.BadPaddingException;
@@ -47,7 +26,7 @@ import javax.crypto.NoSuchPaddingException;
 
 public class MainActivity extends Activity {
 
-    private Button read, ride;
+    private Button read, ride,alight;
     FelicaCard felicaCard;
     Utils utils;
 
@@ -93,6 +72,7 @@ public class MainActivity extends Activity {
     void initUI() {
         read = findViewById(R.id.read);
         ride = findViewById(R.id.ride);
+        alight = findViewById(R.id.alight);
         read.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -126,11 +106,9 @@ public class MainActivity extends Activity {
         ride.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                System.out.println("ride");
 
                 Executors.newSingleThreadExecutor().execute(() -> {
                     try {
-                        System.out.println("Start Time :" + LocalDateTime.now());
 
                         // Do database & card work on background thread
                         felicaCard.detectFelicaCard();
@@ -145,11 +123,6 @@ public class MainActivity extends Activity {
 //                                });
                             }
                         });
-                        System.out.println("Card balance: "+felicaCard.getBalance());
-
-
-//                        utils.initializeFareMatrix(FARE_MATRIX);
-//                        utils.initializeRouteList(routeStr);
 
                         RideAndAlight rideAndAlight = new RideAndAlight(felicaCard);
                         rideAndAlight.setType(RideAndAlight.Type.RIDE);
@@ -166,7 +139,51 @@ public class MainActivity extends Activity {
                             }
                         });
 
-                        System.out.println("End Time :" + LocalDateTime.now());
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+            }
+        });
+        alight.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+//                System.out.println("Alight");
+
+                Executors.newSingleThreadExecutor().execute(() -> {
+                    try {
+//                        System.out.println("Start Time :" + LocalDateTime.now());
+
+                        // Do database & card work on background thread
+                        felicaCard.detectFelicaCard();
+
+                        felicaCard.readCard(new DataInterface() {
+                            @Override
+                            public void receiveTransactionData(TransactionData transactionData) {
+                                // You can update UI here if needed
+//                                System.out.println("Card balance: "+transactionData.getSvBalance());
+//                                new Handler(Looper.getMainLooper()).post(() -> {
+//                                    // update UI with transactionData if needed
+//                                });
+                            }
+                        });
+                        RideAndAlight rideAndAlight = new RideAndAlight(felicaCard);
+                        rideAndAlight.setType(RideAndAlight.Type.ALIGHT);
+                        rideAndAlight.setDirection(RideAndAlight.Direction.UPSTREAM);
+                        rideAndAlight.setFareMatrix(utils.fareMatrix);
+                        rideAndAlight.setStation(new Gson().toJson(utils.fareMatrix.getStations().get(1)));
+
+                        rideAndAlight.writeData(new DataInterface() {
+                            @Override
+                            public void receiveTransactionData(TransactionData paramTransactionData) {
+//                                new Handler(Looper.getMainLooper()).post(() -> {
+//                                    // update UI with paramTransactionData if needed
+//                                });
+                            }
+                        });
+//                        System.out.println("Card balance: "+felicaCard.getBalance());
+
 
                     } catch (Exception e) {
                         e.printStackTrace();
