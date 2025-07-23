@@ -21,4 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "P18-Q-SDK"
 include ':app'
-include ':app:busvalidatorsdk'
+include ':busvalidatorsdk'

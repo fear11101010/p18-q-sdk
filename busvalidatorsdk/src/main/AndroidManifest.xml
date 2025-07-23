@@ -7,7 +7,7 @@
         android:allowBackup="false"
         android:supportsRtl="true">
         <activity
-            android:name=".MainActivity"
+            android:name=".MainActivitySDK"
             android:exported="true">
         </activity>
 

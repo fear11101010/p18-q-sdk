@@ -336,14 +336,15 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         if (ret == 0) {
             return 0;
         }
-        long st = System.currentTimeMillis();
-        ret = writeBlockData(blockNum, blockNum * 2, blockList, blockData);
+//        long st = System.currentTimeMillis();
+         ret = writeBlockData(blockNum, blockNum * 2, blockList, blockData);
 //        int ret = writeBlockData(blockNum, blockNum * 2, blockList, blockData);
         if (ret == 0) {
             return 0;
         }
-        long et = System.currentTimeMillis();
-        Log.d("writeInCard_time", "------->" + ((double) (et - st)) / 1000);
+//        long et = System.currentTimeMillis();
+//        System.out.println("Write Time: "+(double) (et - st));
+//        Log.d("writeInCard_time", "------->" + ((double) (et - st)) / 1000);
         return 1;
     }
 
@@ -380,12 +381,12 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         byte serviceNum;
         byte[] serviceList = new byte[64];
         serviceNum = 7;
-        serviceList[0] = 0x0A; //Issuer info file
+        serviceList[0] = 0x08; //Issuer info file
         serviceList[1] = 0x11; //Issuer info file
         serviceList[2] = 0x01; //Service key ver
         serviceList[3] = 0x00; //Service key ver
 
-        serviceList[4] = 0x0A; //Card attribute info file
+        serviceList[4] = 0x08; //Card attribute info file
         serviceList[5] = 0x13; //Card attribute info file
         serviceList[6] = 0x01; //Service key ver
         serviceList[7] = 0x00; //Service key ver
@@ -393,7 +394,7 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         serviceList[9] = 0x14; //EPurse info file
         serviceList[10] = 0x01; //Service key ver
         serviceList[11] = 0x00; //Service key ver
-        serviceList[12] = 0x0A; //Operator info file
+        serviceList[12] = 0x08; //Operator info file
         serviceList[13] = 0x21; //Operator info file
         serviceList[14] = 0x01; //Service key ver
         serviceList[15] = 0x00; //Service key ver

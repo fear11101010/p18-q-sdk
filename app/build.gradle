@@ -38,7 +38,7 @@ dependencies {
     implementation libs.constraintlayout
     implementation libs.navigation.fragment
     implementation libs.navigation.ui
-    implementation project(":app:busvalidatorsdk")
+    implementation project(":busvalidatorsdk")
     implementation libs.gson
     compileOnly libs.lombok
     annotationProcessor libs.lombok

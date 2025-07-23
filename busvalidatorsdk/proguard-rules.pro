@@ -32,9 +32,17 @@
 #-keep public class com.dtca.busvalidator.busvalidatorsdk.model.TransactionData
 #-keep public class com.dtca.busvalidator.busvalidatorsdk.model.Route
 #-keep public class com.dtca.busvalidator.busvalidatorsdk.model.FareMatrix
-#-keep public class com.dtca.busvalidator.busvalidatorsdk.Sam
-#-keep public class com.dtca.busvalidator.busvalidatorsdk.FelicaCard
-#-keep public class com.dtca.busvalidator.busvalidatorsdk.helper.Utils
+-keep public class com.dtca.busvalidator.busvalidatorsdk.Sam {
+    public *;
+}
+-keep public class com.dtca.busvalidator.busvalidatorsdk.FelicaCard {
+    public *;
+}
+-keep public class com.dtca.busvalidator.busvalidatorsdk.QRCodeReader {
+    public *;
+}
+
+
 
 -keep class * {
     static <fields>;

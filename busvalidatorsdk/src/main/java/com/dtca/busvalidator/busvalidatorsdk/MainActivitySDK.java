@@ -1,29 +1,20 @@
 package com.dtca.busvalidator.busvalidatorsdk;
 
-import static com.google.gson.internal.$Gson$Types.arrayOf;
-
-import android.Manifest;
-import android.bluetooth.BluetoothAdapter;
-import android.content.pm.PackageManager;
-import android.os.Build;
+import android.app.Activity;
 import android.os.Bundle;
-import android.util.Log;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
 import com.dtca.busvalidator.busvalidatorsdk.db.DatabaseHelper;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivitySDK extends Activity {
     private static final int REQUEST_CODE_BLUETOOTH_CONNECT = 1001;
     DatabaseHelper databaseHelper;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
-//        setContentView(R.layout.busvalidatorsdk_main);
+//        EdgeToEdge.enable(this);
+        setContentView(R.layout.activity_main);
         databaseHelper = DatabaseHelper.getInstance(this.getApplicationContext());
 
         /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) { // Android 12 (API 31)

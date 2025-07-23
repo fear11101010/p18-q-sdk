@@ -280,7 +280,7 @@ public class RideAndAlight {
 
     public void writeData(DataInterface dataInterface) throws Exception {
         // write data
-        long sTime = System.currentTimeMillis();
+//        long sTime = System.currentTimeMillis();
         int serviceNumber = 5;
         byte[] serviceCodeList = new byte[serviceNumber * 4];
         serviceCodeList[0] = (byte) 0x08; // Attribute information file
@@ -308,17 +308,17 @@ public class RideAndAlight {
 
         int blockNumber = 6;
         byte[] blockNumberList = new byte[blockNumber * 2];
-        blockNumberList[0] = (byte) 0x80;
+        blockNumberList[0] = (byte) 0x81; // Attribute information file
         blockNumberList[1] = (byte) 0x00;
-        blockNumberList[2] = (byte) 0x80;
+        blockNumberList[2] = (byte) 0x81;
         blockNumberList[3] = (byte) 0x01;
-        blockNumberList[4] = (byte) 0x81;
+        blockNumberList[4] = (byte) 0x82; // e-Purse  file
         blockNumberList[5] = (byte) 0x00;
-        blockNumberList[6] = (byte) 0x82;
+        blockNumberList[6] = (byte) 0x84; // Stored value log information file
         blockNumberList[7] = (byte) 0x00;
-        blockNumberList[8] = (byte) 0x83;
+        blockNumberList[8] = (byte) 0x85; // Gate access log file
         blockNumberList[9] = (byte) 0x00;
-        blockNumberList[10] = (byte) 0x84;
+        blockNumberList[10] = (byte) 0x86; // Gate access log file (for transfer)
         blockNumberList[11] = (byte) 0x00;
 //        blockNumberList[12] = (byte) 0x84;
 //        blockNumberList[13] = (byte) 0x01;
@@ -342,7 +342,7 @@ public class RideAndAlight {
             throw new TypeNotSetException("No type set");
         }
         long eTime = System.currentTimeMillis();
-        Log.d("writeData_time", "writeData_time: "+((double)(eTime-sTime))/1000);
+//        Log.d("writeData_time", "writeData_time: "+((double)(eTime-sTime))/1000);
     }
 
     private void sendTransactionData(@NonNull DataInterface dataInterface) {
