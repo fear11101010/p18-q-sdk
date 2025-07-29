@@ -27,6 +27,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.Executors;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -111,41 +112,40 @@ public class RideAndAlight {
     public void setStation(String stationJson) throws TypeNotSetException, CardReadException, AlightNotAllowedException, RouteNotFoundException, CancelOfEntryNotAllowedException, RideNotAllowedException, BalanceNotAvailableException, CancelOfEntryTimeExpireException, NotSameDateException, NotSameBusException, StatusNotRideException, SameStationException {
 
         Route.Station station = new Gson().fromJson(stationJson, Route.Station.class);
-        if(type==Type.CANCEL_OF_ENTRY){
-            if(!ValidateCard.isBus(gateAccessLogInformation.getStatusFlag())){
+        if (type == Type.CANCEL_OF_ENTRY) {
+            if (!ValidateCard.isBus(gateAccessLogInformation.getStatusFlag())) {
                 throw new NotSameBusException("Not bus exception");
             }
-            if(!ValidateCard.isStatusRide(gateAccessLogInformation.getStatusFlag())){
+            if (!ValidateCard.isStatusRide(gateAccessLogInformation.getStatusFlag())) {
                 throw new StatusNotRideException("Not in Ride Mode");
             }
-            if(!ValidateCard.isSameBus(gateAccessLogInformation.getCurrentEquipmentLocationNumber())){
+            if (!ValidateCard.isSameBus(gateAccessLogInformation.getCurrentEquipmentLocationNumber())) {
                 throw new NotSameBusException("Bus not same");
             }
 //            if(!ValidateCard.isSameDate(storedLogInformation)){
-            if(!ValidateCard.isSameDate(gateAccessLogInformation)){
+            if (!ValidateCard.isSameDate(gateAccessLogInformation)) {
                 throw new NotSameDateException("Date is expire");
             }
-            if(ValidateCard.isGreaterThenTime(this.gateAccessLogInformation,MasterConfigName.MINIMUM_CANCEL_OF_ENTRY_TIME)){
+            if (ValidateCard.isGreaterThenTime(this.gateAccessLogInformation, MasterConfigName.MINIMUM_CANCEL_OF_ENTRY_TIME)) {
                 throw new CancelOfEntryTimeExpireException("Cancel of entry time expire");
             }
 //            if(!ValidateCard.isSameStation(storedLogInformation.getPlace1(),station.getStationCode())){
-            if(!ValidateCard.isSameStation(gateAccessLogInformation.getCurrentStationCode(),station.getStationCode())){
+            if (!ValidateCard.isSameStation(gateAccessLogInformation.getCurrentStationCode(), station.getStationCode())) {
                 throw new SameStationException("not in same station");
             }
             createAlight(station);
             return;
-        }
-        else if (!ValidateCard.checkCardDirection(Utils.byteToHex(felicaCard.getIdi()),direction) ||
+        } else if (!ValidateCard.checkCardDirection(Utils.byteToHex(felicaCard.getIdi()), direction) ||
 //                !ValidateCard.isSameRoute(station.getStationCode(),Utils.byteToHex(this.storedLogInformation.getPlace1())) ||
-                !ValidateCard.isSameRoute(station.getStationCode(),Utils.byteToHex(this.gateAccessLogInformation.getCurrentStationCode())) ||
+                !ValidateCard.isSameRoute(station.getStationCode(), Utils.byteToHex(this.gateAccessLogInformation.getCurrentStationCode())) ||
                 !ValidateCard.isSameBus(this.gateAccessLogInformation.getCurrentEquipmentLocationNumber()) ||
 //                !ValidateCard.isSameDate(this.storedLogInformation) ||
                 !ValidateCard.isSameDate(this.gateAccessLogInformation) ||
                 ValidateCard.isStatusAlight(gateAccessLogInformation.getStatusFlag()) ||
-                ValidateCard.isGreaterThenTime(this.gateAccessLogInformation,MasterConfigName.ALIGHT_EXPIRY_TIME)) {
+                ValidateCard.isGreaterThenTime(this.gateAccessLogInformation, MasterConfigName.ALIGHT_EXPIRY_TIME)) {
             type = Type.RIDE;
         } else if (ValidateCard.isStatusRide(gateAccessLogInformation.getStatusFlag())) {
-            if(!ValidateCard.isBus(gateAccessLogInformation.getStatusFlag())){
+            if (!ValidateCard.isBus(gateAccessLogInformation.getStatusFlag())) {
                 throw new RideNotAllowedException("Please exit from MRT first.");
             }
             type = Type.ALIGHT;
@@ -154,8 +154,8 @@ public class RideAndAlight {
 //            Utils.updateOrInsertTrips(Utils.byteToHex(felicaCard.getIdi()),direction);
 //        }
         if (this.type == Type.RIDE) {
-            if (!ValidateCard.isEnoughBalanceAvailable(this.storedLogInformation.getCardBalance(),MasterConfigName.MINIMUM_RIDE_BALANCE)) {
-                throw new BalanceNotAvailableException("You does not have enough balance for ride. You need at least "+Utils.getMasterConfig(MasterConfigName.MINIMUM_RIDE_BALANCE)+" TK for ride.");
+            if (!ValidateCard.isEnoughBalanceAvailable(this.storedLogInformation.getCardBalance(), MasterConfigName.MINIMUM_RIDE_BALANCE)) {
+                throw new BalanceNotAvailableException("You does not have enough balance for ride. You need at least " + Utils.getMasterConfig(MasterConfigName.MINIMUM_RIDE_BALANCE) + " TK for ride.");
             }
             if (!ValidateCard.checkServiceIdIsEligibleForRide(this.gateAccessLogInformation)) {
                 throw new RideNotAllowedException("You does not exit from MRT. Please first exit first from MRT");
@@ -167,7 +167,7 @@ public class RideAndAlight {
             }*/
 
 //            if (!ValidateCard.isSameRoute(station.getStationCode(),Utils.byteToHex(this.storedLogInformation.getPlace1())) ||
-            if (!ValidateCard.isSameRoute(station.getStationCode(),Utils.byteToHex(this.gateAccessLogInformation.getCurrentStationCode())) ||
+            if (!ValidateCard.isSameRoute(station.getStationCode(), Utils.byteToHex(this.gateAccessLogInformation.getCurrentStationCode())) ||
                     !ValidateCard.isSameBus(this.gateAccessLogInformation.getCurrentEquipmentLocationNumber())) {
                 createRide(station);
                 return;
@@ -177,15 +177,14 @@ public class RideAndAlight {
                 return;
             }
             createRide(station);
-        }
-        else if (this.type == Type.ALIGHT) {
+        } else if (this.type == Type.ALIGHT) {
             if (!ValidateCard.checkServiceIdIsEligibleForAlight(this.gateAccessLogInformation)) {
                 throw new AlightNotAllowedException("You does not exit from MRT. Please first exit first from MRT");
             }
-            if (Utils.getInstance().getCardList().stream().anyMatch(s->s.equalsIgnoreCase(cardId))) {
+            if (Utils.getInstance().getCardList().stream().anyMatch(s -> s.equalsIgnoreCase(cardId))) {
                 throw new AlightNotAllowedException("Alight not allowed at this moment. If you want alight you need to cancel of entry. Please contact with conductor");
             }
-            if (ValidateCard.isGreaterThenTime(this.gateAccessLogInformation,MasterConfigName.ALIGHT_EXPIRY_TIME)) {
+            if (ValidateCard.isGreaterThenTime(this.gateAccessLogInformation, MasterConfigName.ALIGHT_EXPIRY_TIME)) {
                 throw new AlightNotAllowedException("Alight not allowed at this moment. If you want alight you need to cancel of entry. Please contact with conductor");
             }
             /*if(ValidateCard.isStatusRide(this.gateAccessLogInformation.getStatusFlag())){
@@ -230,7 +229,7 @@ public class RideAndAlight {
             }*/
 
 //            if (ValidateCard.isSameRoute(station.getStationCode(),Utils.byteToHex(this.storedLogInformation.getPlace1())) &&
-            if (ValidateCard.isSameRoute(station.getStationCode(),Utils.byteToHex(this.gateAccessLogInformation.getCurrentStationCode())) &&
+            if (ValidateCard.isSameRoute(station.getStationCode(), Utils.byteToHex(this.gateAccessLogInformation.getCurrentStationCode())) &&
                     !ValidateCard.isSameStation(this.gateAccessLogInformation.getCurrentStationCode(), station.getStationCode())) {
                 createAlight(station);
                 return;
@@ -241,8 +240,7 @@ public class RideAndAlight {
             } else {
                 throw new AlightNotAllowedException("Alight not allowed at this moment. If you want alight you need to cancel of entry. Please contact with conductor");
             }
-        }
-        else {
+        } else {
             throw new TypeNotSetException("Type not set. Please set type first (Ride or Alight)");
         }
     }
@@ -268,7 +266,7 @@ public class RideAndAlight {
         assert fareMatrix.getFareMatrix() != null;
         assert alight != null;
         assert alight.getStation() != null;
-        if(fareMatrix.isCircular() && alight.getStation().getStationCode().equalsIgnoreCase(place1) && type.equals(Type.ALIGHT)){
+        if (fareMatrix.isCircular() && alight.getStation().getStationCode().equalsIgnoreCase(place1) && type.equals(Type.ALIGHT)) {
             return Objects.requireNonNull(fareMatrix.getFareMatrix()
                     .get(alight.getStation().getStationCode())).get("maxFareUpStream");
         }
@@ -280,7 +278,7 @@ public class RideAndAlight {
 
     public void writeData(DataInterface dataInterface) throws Exception {
         // write data
-//        long sTime = System.currentTimeMillis();
+        long sTime = System.currentTimeMillis();
         int serviceNumber = 5;
         byte[] serviceCodeList = new byte[serviceNumber * 4];
         serviceCodeList[0] = (byte) 0x08; // Attribute information file
@@ -326,26 +324,26 @@ public class RideAndAlight {
             byte[] bytes = ride.getByteData();
             int i = readWriteInCard.writeInCard(serviceNumber, serviceCodeList, blockNumber, blockNumberList, bytes);
             if (i != 1) {
+                sendTransactionData(dataInterface, false);
                 throw new CardWriteException("Can not write in card at this moment. Please try again later");
             }
-            sendTransactionData(dataInterface);
-        }
-        else if (type == Type.ALIGHT || type == Type.CANCEL_OF_ENTRY) {
+            sendTransactionData(dataInterface, true);
+        } else if (type == Type.ALIGHT || type == Type.CANCEL_OF_ENTRY) {
             int i = readWriteInCard.writeInCard(serviceNumber, serviceCodeList, blockNumber, blockNumberList, alight.getByteData());
             if (i != 1) {
+                sendTransactionData(dataInterface, false);
                 throw new CardWriteException("Can not write in card at this moment. Please try again later");
             }
-            sendTransactionData(dataInterface);
+            sendTransactionData(dataInterface, true);
 //            Utils.delete(Utils.byteToHex(felicaCard.getIdi()));
-        }
-        else {
+        } else {
             throw new TypeNotSetException("No type set");
         }
         long eTime = System.currentTimeMillis();
-//        Log.d("writeData_time", "writeData_time: "+((double)(eTime-sTime))/1000);
+        Log.d("writeData_time", "writeData_time: " + ((double) (eTime - sTime)) / 1000);
     }
 
-    private void sendTransactionData(@NonNull DataInterface dataInterface) {
+    private void sendTransactionData(@NonNull DataInterface dataInterface, boolean isProcessed) {
         int initialBalance = this.type == Type.RIDE ? ride.getInitialBalance() : alight.getInitialBalance();
         int initialNegativeBalance = type == Type.RIDE ? ride.getInitialNegativeBalance() : alight.getInitialNegativeBalance();
         TransactionData transactionData = TransactionData.builder()
@@ -358,7 +356,7 @@ public class RideAndAlight {
                 .cardControlCode(attributeInfo.getCardControlCode() & 0XFF)
                 .discountCode(attributeInfo.getDiscountCode() & 0XFF)
                 .cardExpirationDate(Utils.byteToHex(attributeInfo.getExpiryDate()))
-                .processUnfinishedFlag(0x00)
+                .processUnfinishedFlag(isProcessed ? 0x00 : 0x01)
                 .deviceSerialNumber(Utils.getDeviceSerialNo())
                 .svLogId(Utils.byteArrayToInt(ePurseInfo.getBinExecutionId()))
                 .svBalance(Utils.charArrayToIntLE(ePurseInfo.getBinRemainingSV(), 4))
@@ -371,36 +369,36 @@ public class RideAndAlight {
                 .discountFareAmount(0)
                 .inStoppage(Utils.byteToHex(storedLogInformation.getPlace1()))
                 .outStoppage(Utils.byteToHex(storedLogInformation.getPlace2()))
-                .negativeValue(Utils.charArrayToIntLE(attributeInfo.getNegativeValue(),2))
-                .negativeValueUsed(Utils.charArrayToIntLE(attributeInfo.getNegativeValue(),2) - initialNegativeBalance)
-                .message(type==Type.ALIGHT &&
-                        Utils.convertTwosComplementByteArrayToLittleIndian(storedLogInformation.getCardBalance(),3)<Utils.getMasterConfig(MasterConfigName.MINIMUM_RIDE_BALANCE)?
-                        "card17":"NA")
+                .negativeValue(Utils.charArrayToIntLE(attributeInfo.getNegativeValue(), 2))
+                .negativeValueUsed(Utils.charArrayToIntLE(attributeInfo.getNegativeValue(), 2) - initialNegativeBalance)
+                .message(type == Type.ALIGHT &&
+                        Utils.convertTwosComplementByteArrayToLittleIndian(storedLogInformation.getCardBalance(), 3) < Utils.getMasterConfig(MasterConfigName.MINIMUM_RIDE_BALANCE) ?
+                        "card17" : "NA")
                 .build();
         dataInterface.receiveTransactionData(transactionData);
     }
 
-    private void createRide(Route.Station station){
+    private void createRide(Route.Station station) {
         Utils.delete(Utils.byteToHex(felicaCard.getIdi()));
-        if(direction!=null){
-            Utils.updateOrInsertTrips(Utils.byteToHex(felicaCard.getIdi()),direction);
+        if (direction != null) {
+            Utils.updateOrInsertTrips(Utils.byteToHex(felicaCard.getIdi()), direction);
         }
         this.type = Type.RIDE;
         Utils.getInstance().getCardList().add(cardId);
         this.ride = new Ride(felicaCardDetail);
         this.ride.setStation(station);
     }
-    private void createAlight(Route.Station station){
+
+    private void createAlight(Route.Station station) {
 //        this.type = Type.ALIGHT;
 //        this.place1 = Utils.byteToHex(storedLogInformation.getPlace1());
-        if(direction!=null){
-            Utils.updateCardDirection(Utils.byteToHex(felicaCard.getIdi()),direction);
+        if (direction != null) {
+            Utils.updateCardDirection(Utils.byteToHex(felicaCard.getIdi()), direction);
         }
         this.place1 = Utils.byteToHex(gateAccessLogInformation.getCurrentStationCode());
         this.alight = new Alight(felicaCardDetail);
         this.alight.setStation(station);
     }
-
 
 
     public enum Direction {
@@ -438,7 +436,7 @@ public class RideAndAlight {
             this.gateAccessLogInformation = felicaCardDetail.getGateAccessLogInformation();
             this.gateAccessLogInformationForTransfer = felicaCardDetail.getGateAccessLogInformationForTransfer();
             this.initialBalance = Utils.charArrayToIntLE(ePurseInfo.getBinRemainingSV(), 4);
-            this.initialNegativeBalance = Utils.charArrayToIntLE(attributeInfo.getNegativeValue(),2); // big indian to int
+            this.initialNegativeBalance = Utils.charArrayToIntLE(attributeInfo.getNegativeValue(), 2); // big indian to int
 
         }
 
@@ -450,9 +448,9 @@ public class RideAndAlight {
                     int maxFare = RideAndAlight.this.getMaxFare();
                     // current negative balance + new negative balance
 //                    int negativeValue = Math.abs(maxFare - Utils.charArrayToIntLE(ePurseInfo.getBinRemainingSV(),4))+initialNegativeBalance;
-                    int negativeValue = Math.abs(maxFare - Utils.charArrayToIntLE(ePurseInfo.getBinRemainingSV(),4));
-                    attributeInfo.setNegativeValue(Utils.intToCharArrayLE(negativeValue,2)); // little indian format
-                }else{
+                    int negativeValue = Math.abs(maxFare - Utils.charArrayToIntLE(ePurseInfo.getBinRemainingSV(), 4));
+                    attributeInfo.setNegativeValue(Utils.intToCharArrayLE(negativeValue, 2)); // little indian format
+                } else {
                     attributeInfo.setNegativeValue(new byte[2]);
                 }
             }
@@ -460,7 +458,7 @@ public class RideAndAlight {
 
         public void setStation(Route.Station station) {
             this.station = station;
-            Utils.updateFromStation(Utils.byteToHex(felicaCard.getIdi()),station.getStationCode());
+            Utils.updateFromStation(Utils.byteToHex(felicaCard.getIdi()), station.getStationCode());
             this.isNegative = Utils.charArrayToIntLE(ePurseInfo.getBinRemainingSV(), 4) - (RideAndAlight.this.getMaxFare() +
                     initialNegativeBalance) < 0;
         }
@@ -475,11 +473,11 @@ public class RideAndAlight {
             if (isNegative) {
                 ePurseInfo.setBinCashbackData(Utils.intToCharArrayLE(sv)); // Little indian format
                 ePurseInfo.setBinRemainingSV(Utils.intToCharArrayLE(0)); // Little indian format
-                Utils.updateCashBackAmount(Utils.byteToHex(felicaCard.getIdi()),sv);
+                Utils.updateCashBackAmount(Utils.byteToHex(felicaCard.getIdi()), sv);
             } else {
                 ePurseInfo.setBinRemainingSV(Utils.intToCharArrayLE(Math.max(sv - maxFare, 0))); // Little indian format
                 ePurseInfo.setBinCashbackData(Utils.intToCharArrayLE(maxFare)); // Little indian format
-                Utils.updateCashBackAmount(Utils.byteToHex(felicaCard.getIdi()),maxFare);
+                Utils.updateCashBackAmount(Utils.byteToHex(felicaCard.getIdi()), maxFare);
             }
         }
 
@@ -607,18 +605,18 @@ public class RideAndAlight {
             this.gateAccessLogInformation = felicaCardDetail.getGateAccessLogInformation();
             this.gateAccessLogInformationForTransfer = felicaCardDetail.getGateAccessLogInformationForTransfer();
             this.initialBalance = Utils.charArrayToIntLE(ePurseInfo.getBinRemainingSV(), 4);
-            this.initialNegativeBalance = Utils.charArrayToIntLE(attributeInfo.getNegativeValue(),2);
+            this.initialNegativeBalance = Utils.charArrayToIntLE(attributeInfo.getNegativeValue(), 2);
             this.serviceId = Utils.getServiceId(storedLogInformation);
-            if(Arrays.stream(new String[]{"d220", "d320"}).noneMatch(s -> s.equalsIgnoreCase(serviceId))){
+            if (Arrays.stream(new String[]{"d220", "d320"}).noneMatch(s -> s.equalsIgnoreCase(serviceId))) {
                 this.cashbackAmount = felicaCard.getCashbackAmount();
-            } else{
+            } else {
                 this.cashbackAmount = Utils.charArrayToIntLE(ePurseInfo.getBinCashbackData(), 4);
             }
         }
 
         public void setStation(Route.Station station) {
             this.station = station;
-            Utils.updateToStation(Utils.byteToHex(felicaCard.getIdi()),station.getStationCode());
+            Utils.updateToStation(Utils.byteToHex(felicaCard.getIdi()), station.getStationCode());
 //            int cashBackAmount = Utils.charArrayToIntLE(ePurseInfo.getBinCashbackData(), 4);
 //            int cashBackAmount = Utils.getTripsByCardId(Utils.byteToHex(felicaCard.getIdi())).cashBackAmount;
             int sv = Utils.charArrayToIntLE(ePurseInfo.getBinRemainingSV(), 4);
@@ -635,7 +633,7 @@ public class RideAndAlight {
                     int fare = RideAndAlight.this.getFare();
 //                    int negativeValue = Math.abs(Utils.byteToInteger(attributeInfo.getNegativeValue())-Math.abs(fare - RideAndAlight.this.getMaxFare()));
                     int negativeValue = Math.abs(fare - cashbackAmount);
-                    attributeInfo.setNegativeValue(Utils.intToCharArrayLE(negativeValue,2)); // Little indian format
+                    attributeInfo.setNegativeValue(Utils.intToCharArrayLE(negativeValue, 2)); // Little indian format
                 } else {
                     attributeInfo.setNegativeValue(new byte[2]);
                 }
@@ -680,7 +678,7 @@ public class RideAndAlight {
 
             if (isNegative) {
                 storedLogInformation.setServiceClassificationCode((byte) 0xD7);
-                storedLogInformation.setCardBalance(Utils.convertToTwosComplementLE(-Utils.charArrayToIntLE(attributeInfo.getNegativeValue(),2), 3));
+                storedLogInformation.setCardBalance(Utils.convertToTwosComplementLE(-Utils.charArrayToIntLE(attributeInfo.getNegativeValue(), 2), 3));
             } else {
                 storedLogInformation.setServiceClassificationCode((byte) 0xD6);
                 storedLogInformation.setCardBalance(Arrays.copyOfRange(ePurseInfo.getBinRemainingSV(), 0, 3));
@@ -701,7 +699,7 @@ public class RideAndAlight {
             gateAccessLogInformation.setCurrentEquipmentLocationNumber(Utils.hexToByte(Utils.getInstance().getDeviceInfo().getEquipmentLocationNumber()));
             gateAccessLogInformation.setAmountOfBasicFare(Utils.hexToByte("000000"));
 
-            int maxFare = Utils.charArrayToIntLE(gateAccessLogInformation.getAmountOfDistanceFare(),3);
+            int maxFare = Utils.charArrayToIntLE(gateAccessLogInformation.getAmountOfDistanceFare(), 3);
 //            gateAccessLogInformation.setAmountOfDistanceFare(Utils.hexToByte(String.format("%06X", RideAndAlight.this.getFare() - maxFare)));
             gateAccessLogInformation.setAmountOfDistanceFare(RideAndAlight.this.getFare() - maxFare < 0 ? Utils.convertToTwosComplementLE(RideAndAlight.this.getFare() - maxFare, 3) : Arrays.copyOfRange(Utils.intToCharArrayLE(RideAndAlight.this.getFare() - maxFare), 0, 3));
         }

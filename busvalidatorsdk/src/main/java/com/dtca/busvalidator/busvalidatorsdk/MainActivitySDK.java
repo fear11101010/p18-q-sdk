@@ -14,7 +14,7 @@ public class MainActivitySDK extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 //        EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_main);
+//        setContentView(R.layout.activity_main);
         databaseHelper = DatabaseHelper.getInstance(this.getApplicationContext());
 
         /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) { // Android 12 (API 31)

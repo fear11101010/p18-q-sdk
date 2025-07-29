@@ -47,7 +47,9 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
     private static FelicaCard felicaCard;
     @Getter
     private final Sam sam;
+    @Getter
     private byte[] iDm;
+    @Getter
     private byte[] pMm;
     private byte[] idt;
     @Getter
@@ -80,12 +82,26 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
     public void detectFelicaCard() throws Exception {
 
         String[] result = BasicOper.dc_FeliCaReset().split("\\|", -1);
-        if (result[0].equals("0000")) {
+        if (result.length>=3 && result[0].equals("0000") && Utils.hexToByte(result[2]).length >=18) {
             this.iDm = Arrays.copyOfRange(Utils.hexToByte(result[2]), 0, 8);
             this.pMm = Arrays.copyOfRange(Utils.hexToByte(result[2]), 8, 16);
             this.systemCode = Arrays.copyOfRange(Utils.hexToByte(result[2]), 16, 18);
             // log.d("IDm", Utils.byteToHex(iDm));
         } else {
+//            BasicOper.dc_FeliCaReset();
+            result = BasicOper.dc_FeliCaApdu("0600FFFF0100").split("\\|", -1);
+            if(result[0].equals("0000") && !TextUtils.isEmpty(result[1])){
+                byte[] hexToByte = Utils.hexToByte(result[1]);
+                if(hexToByte.length>=19){
+                    byte[] bytes = Arrays.copyOfRange(hexToByte,2,hexToByte.length);
+                    this.iDm = Arrays.copyOfRange(bytes, 0, 8);
+                    this.pMm = Arrays.copyOfRange(bytes, 8, 16);
+                    this.systemCode = Arrays.copyOfRange(bytes, 16, 18);
+                }
+                else {
+                    throw new CardNotFoundException("No Card Detected. Please tap card");
+                }
+            }
             throw new CardNotFoundException("No Card Detected. Please tap card");
         }
 
@@ -107,9 +123,9 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         if (ValidateCard.isFirstIssue(felicaCardDetail.getStoredLogInformation().getStoredValueLogId())) {
             throw new CardUnissuedException("Card is not second issued");
         }
-        if (ValidateCard.isFirstIssue(felicaCardDetail.getStoredLogInformation().getStoredValueLogId())) {
+        /*if (ValidateCard.isFirstIssue(felicaCardDetail.getStoredLogInformation().getStoredValueLogId())) {
             throw new CardUnissuedException("Card is not second issued");
-        }
+        }*/
         if (ValidateCard.isSameCardId(initIdi, idi)) {
             throw new CardIdSameException("Card is not initialized");
         }
@@ -214,14 +230,6 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         if (ValidateCard.isVoidCard(attributeInfo.getCardControlCode())) {
             throw new VoidCardException("Card is void");
         }
-    }
-
-    public byte[] getIDm() {
-        return iDm;
-    }
-
-    public byte[] getPMm() {
-        return pMm;
     }
 
     public int mutualAuthV2WithFeliCa(byte serviceCodeNum,

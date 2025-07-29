@@ -41,6 +41,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 //        Utils.initializeReader(this);
+        Utils.openSerialReader();
         utils = Utils.getInstance();
         Utils.initAppDatabase(this);
         utils.initMasterConfig(MASTER_CONFIG_DATA);
@@ -122,6 +123,8 @@ public class MainActivity extends Activity {
 //                                    // update UI with transactionData if needed
 //                                });
                             }
+
+
                         });
 
                         RideAndAlight rideAndAlight = new RideAndAlight(felicaCard);
@@ -137,6 +140,8 @@ public class MainActivity extends Activity {
 //                                    // update UI with paramTransactionData if needed
 //                                });
                             }
+
+
                         });
 
 
@@ -167,6 +172,8 @@ public class MainActivity extends Activity {
 //                                    // update UI with transactionData if needed
 //                                });
                             }
+
+
                         });
                         RideAndAlight rideAndAlight = new RideAndAlight(felicaCard);
                         rideAndAlight.setType(RideAndAlight.Type.ALIGHT);
@@ -181,6 +188,8 @@ public class MainActivity extends Activity {
 //                                    // update UI with paramTransactionData if needed
 //                                });
                             }
+
+
                         });
 //                        System.out.println("Card balance: "+felicaCard.getBalance());
 

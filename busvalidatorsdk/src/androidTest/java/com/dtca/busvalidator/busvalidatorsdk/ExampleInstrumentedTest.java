@@ -3020,19 +3020,13 @@ public class ExampleInstrumentedTest {
         System.out.println("polling_time---->" + ((double) (et - st)) / 1000);
 
         st = System.currentTimeMillis();
-        felicaCard.readCard(new DataInterface() {
-            @Override
-            public void receiveTransactionData(TransactionData transactionData) {
-                // nothing
-            }
+        felicaCard.readCard(transactionData -> {
+            // nothing
         });
         et = System.currentTimeMillis();
         System.out.println("card_read_time---->" + ((double) (et - st)) / 1000);
-        felicaCard.readCardForTransactionHistory(new DataInterface() {
-            @Override
-            public void receiveTransactionData(TransactionData transactionData) {
-                // nothing
-            }
+        felicaCard.readCardForTransactionHistory(transactionData -> {
+            // nothing
         });
         felicaCard.detectFelicaCard();
         List<TransactionHistory> transactionHistories = felicaCard.getTransactionHistoryWithoutAuth();
@@ -3582,11 +3576,8 @@ public class ExampleInstrumentedTest {
         System.out.println("polling_time---->" + ((double) (et - st)) / 1000);
 
         st = System.currentTimeMillis();
-        felicaCard.readCard(new DataInterface() {
-            @Override
-            public void receiveTransactionData(TransactionData transactionData) {
-                // nothing
-            }
+        felicaCard.readCard(transactionData -> {
+            // nothing
         });
 
 //        boolean b = ValidateCard.checkCardDirection(Utils.byteToHex(this.felicaCard.getIdi()), this.direction) && ValidateCard.isSameRoute(station.getStationCode(), Utils.byteToHex(this.storedLogInformation.getPlace1())) && ValidateCard.isSameBus(this.gateAccessLogInformation.getCurrentEquipmentLocationNumber()) && ValidateCard.isSameDate(this.storedLogInformation) && !ValidateCard.isStatusAlight(this.gateAccessLogInformation.getStatusFlag()) && ValidateCard.checkCardDirection(Utils.byteToHex(this.felicaCard.getIdi()), this.direction) && !ValidateCard.isGreaterThenTime(this.gateAccessLogInformation, MasterConfigName.ALIGHT_EXPIRY_TIME);
@@ -4138,16 +4129,13 @@ public class ExampleInstrumentedTest {
         System.out.println("polling_time---->" + ((double) (et - st)) / 1000);
 
         st = System.currentTimeMillis();
-        int i = felicaCard.readCard(new DataInterface() {
-            @Override
-            public void receiveTransactionData(TransactionData transactionData) {
-                // nothing
-            }
+        int i = felicaCard.readCard(transactionData -> {
+            // nothing
         });
         if (i == 0) {
             throw new Exception("can not read");
         }
-        felicaCard.recharge();
+//        felicaCard.recharge();
 
 
 //        boolean b = ValidateCard.checkCardDirection(Utils.byteToHex(this.felicaCard.getIdi()), this.direction) && ValidateCard.isSameRoute(station.getStationCode(), Utils.byteToHex(this.storedLogInformation.getPlace1())) && ValidateCard.isSameBus(this.gateAccessLogInformation.getCurrentEquipmentLocationNumber()) && ValidateCard.isSameDate(this.storedLogInformation) && !ValidateCard.isStatusAlight(this.gateAccessLogInformation.getStatusFlag()) && ValidateCard.checkCardDirection(Utils.byteToHex(this.felicaCard.getIdi()), this.direction) && !ValidateCard.isGreaterThenTime(this.gateAccessLogInformation, MasterConfigName.ALIGHT_EXPIRY_TIME);
