@@ -22,9 +22,11 @@ import com.dtca.busvalidator.busvalidatorsdk.model.interfac.DataInterface;
 import com.google.gson.Gson;
 
 import java.nio.ByteBuffer;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Executors;
@@ -344,8 +346,51 @@ public class RideAndAlight {
     }
 
     private void sendTransactionData(@NonNull DataInterface dataInterface, boolean isProcessed) {
+/*
+        deviceSN                -
+
+        cardId                  -  8
+        recycleCounter          -  1
+        transactionDataId       -  2
+        serviceId               -  2
+        Time Stamp(Date) BCD    -  4
+        Time Stamp(Time) BCD    -  3
+        processUnfinishedFlag   -  1
+        svLogId                 -  2
+        svBalance               -  3
+        svSpent                 -  3
+        processedLocation1      -  2
+        processedLocation2      -  2
+        negativeValue           -  2
+        negativeValueUsed       -  2
+
+        0A013011227414D1 00 0006 D220 20240923 122751 00 0006 000131 FFFFF1 830C 0000 0000 0000
+        0A0130051ECB020E 00 000B D630 20250811 130239 00 000B 0003F7 000000 8C10 8C11 0000 0000
+
+        0A0130021ECB0210 00 0010 D220 20250811 144041 00 0010 0003E8 FFFFFF D88C 1100 0000 0000 00
+
+        0A0130021ECB0210 00 0015 D220 20250811 155228 00 0015 000384 FFFFD8 8C19 0000 0000 0000
+        */
+        LocalDateTime localDateTime = LocalDateTime.now();
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+//        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMddHHmmss",Locale.ENGLISH);
         int initialBalance = this.type == Type.RIDE ? ride.getInitialBalance() : alight.getInitialBalance();
         int initialNegativeBalance = type == Type.RIDE ? ride.getInitialNegativeBalance() : alight.getInitialNegativeBalance();
+        String metaData = Utils.getDeviceSerialNo()+"."
+                +Utils.byteToHex(felicaCard.getIdi())
+                +String.format("%02X",felicaCardDetail.getIssuerInfo().getRecycleCounter())
+                +Utils.byteToHex(attributeInfo.getTxnDataId())
+                +Utils.byteToHex(new byte[]{storedLogInformation.getServiceClassificationCode(), storedLogInformation.getContextCode()})
+                +dateTimeFormatter.format(localDateTime)
+                +(isProcessed?"00":"01")
+                +Utils.byteToHex(storedLogInformation.getStoredValueLogId())
+                +String.format("%06X",(Utils.convertTwosComplementByteArrayToLittleIndian(storedLogInformation.getCardBalance(),3)&0xFFFFFF))
+                +String.format("%06X",((Utils.charArrayToIntLE(ePurseInfo.getBinRemainingSV(), 4) - initialBalance)&0xFFFFFF))
+                +Utils.byteToHex(storedLogInformation.getPlace1())
+                +Utils.byteToHex(storedLogInformation.getPlace2())
+                +String.format("%04X",Utils.charArrayToIntLE(attributeInfo.getNegativeValue(), 2))
+                +String.format("%04X",Utils.charArrayToIntLE(attributeInfo.getNegativeValue(), 2) - initialNegativeBalance);
+
         TransactionData transactionData = TransactionData.builder()
                 .cardId(this.cardId)
                 .recycleCounter(Utils.byteToHex(new byte[]{felicaCardDetail.getIssuerInfo().getRecycleCounter()}))
@@ -374,7 +419,13 @@ public class RideAndAlight {
                 .message(type == Type.ALIGHT &&
                         Utils.convertTwosComplementByteArrayToLittleIndian(storedLogInformation.getCardBalance(), 3) < Utils.getMasterConfig(MasterConfigName.MINIMUM_RIDE_BALANCE) ?
                         "card17" : "NA")
+                .metaData(metaData.toUpperCase())
                 .build();
+
+
+
+
+
         dataInterface.receiveTransactionData(transactionData);
     }
 

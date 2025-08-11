@@ -40,6 +40,7 @@ public class TransactionData {
     String outStoppage;
     Integer negativeValue;
     Integer negativeValueUsed;
+    String metaData;
 
     String message = "NA";
 }

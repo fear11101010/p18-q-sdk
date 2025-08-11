@@ -17,6 +17,7 @@ import com.dtca.busvalidator.busvalidatorsdk.helper.ValidateCard;
 import com.dtca.busvalidator.busvalidatorsdk.model.FelicaCardDetail;
 import com.dtca.busvalidator.busvalidatorsdk.model.GateAccessLogInformation;
 import com.dtca.busvalidator.busvalidatorsdk.model.MasterConfigName;
+import com.dtca.busvalidator.busvalidatorsdk.model.RideAndAlight;
 import com.dtca.busvalidator.busvalidatorsdk.model.StoredLogInformation;
 import com.dtca.busvalidator.busvalidatorsdk.model.TransactionData;
 import com.dtca.busvalidator.busvalidatorsdk.model.TransactionHistory;
@@ -3002,6 +3003,7 @@ public class ExampleInstrumentedTest {
         utils.initMasterConfig(MASTER_CONFIG_DATA);
 
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        Utils.initAppDatabase(appContext);
         long st = System.currentTimeMillis();
         Utils.openSerialReader();
         long et = System.currentTimeMillis();
@@ -3025,12 +3027,19 @@ public class ExampleInstrumentedTest {
         });
         et = System.currentTimeMillis();
         System.out.println("card_read_time---->" + ((double) (et - st)) / 1000);
-        felicaCard.readCardForTransactionHistory(transactionData -> {
+        RideAndAlight rideAndAlight = new RideAndAlight(felicaCard);
+        rideAndAlight.setFareMatrix(Utils.getInstance().fareMatrix);
+        rideAndAlight.setDirection( RideAndAlight.Direction.UPSTREAM);
+        rideAndAlight.setStation(new Gson().toJson(Utils.getInstance().fareMatrix.getStations().get(3)));
+        rideAndAlight.writeData(transactionData -> {
+            Log.d("ride alight: ",new Gson().toJson(transactionData));
+        });
+        /*felicaCard.readCardForTransactionHistory(transactionData -> {
             // nothing
         });
         felicaCard.detectFelicaCard();
         List<TransactionHistory> transactionHistories = felicaCard.getTransactionHistoryWithoutAuth();
-        System.out.println(new Gson().toJson(transactionHistories));
+        System.out.println(new Gson().toJson(transactionHistories));*/
     }
 
     @Test
@@ -4828,6 +4837,30 @@ public class ExampleInstrumentedTest {
 
         System.out.println("time : " + Duration.between(start,end).toMillis());
         System.out.println("recharge amount : " + rechargeAmount);
+    }
+
+
+    @Test
+    public void readCard() throws Exception {
+
+
+        Utils.openSerialReader();
+        Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        // Print the result
+        Sam sam = Sam.getInstance(2, appContext);
+        sam.initSam();
+        FelicaCard felicaCard = FelicaCard.getInstance(sam);
+
+        felicaCard.detectFelicaCard();
+        felicaCard.readCard(transactionData -> {
+
+        });
+        LocalDateTime start = LocalDateTime.now();
+//        int rechargeAmount = felicaCard.getCashbackAmount();
+        LocalDateTime end = LocalDateTime.now();
+
+        System.out.println("total read time : " + Duration.between(start,end).toMillis());
+//        System.out.println("recharge amount : " + rechargeAmount);
     }
 
 
