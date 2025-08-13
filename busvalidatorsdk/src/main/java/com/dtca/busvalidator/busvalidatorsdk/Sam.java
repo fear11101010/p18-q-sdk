@@ -2,7 +2,7 @@ package com.dtca.busvalidator.busvalidatorsdk;
 
 import android.content.Context;
 import android.text.TextUtils;
-//import android.util.log;
+import android.util.Log;
 
 import com.decard.NDKMethod.BasicOper;
 import com.decard.driver.utils.HexDump;
@@ -50,7 +50,7 @@ public class Sam {
 
     private Sam(int samSlot,Context context) {
         this.context = context.getApplicationContext();
-//        openReader(context.getApplicationContext());
+        openReader(context.getApplicationContext());
         this.samSlot = samSlot;
 
     }
@@ -68,20 +68,26 @@ public class Sam {
     }
     public String initSam() throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, SamSyntaxError {
         String[] result = BasicOper.dc_setcpu(samSlot).split("\\|", -1);
-        // // log.d("sam_init", String.format("code :%s,data :%s", result[0], result[1]));
+//        String volResult = BasicOper.dc_SetCpuVoltage(0);
+          Log.d("#RD>>> sam_init", String.format("code :%s,data :%s", result[0], result[1]));
+
         if (resetSam()!=null){
             // // log.d("initSam: ","sam reset successfully");
         }else {
             // // log.d("initSam: ","can not reset sam can not set to normal mode");
             return null;
         }
+        System.out.println("#RD>>> SAM Reset");
         String samNormalModeData = setToNormalMode();
         if (samNormalModeData!=null){
+            System.out.println("#RD>>> SAM set normal mode success");
             // log.d("initSam: ","sam set to normal mode successfully---"+samNormalModeData);
         }else {
+            System.out.println("#RD>>> SAM set normal mode failed");
             // log.d("initSam: ","sam can not set to normal mode");
             return null;
         }
+        System.out.println("#RD>>> SAM Normal Mode");
         String samAttention = sendAttention();
         if (samAttention!=null){
             // log.d("initSam: ","sam attention send successfully---"+samAttention);
@@ -89,6 +95,7 @@ public class Sam {
             // log.d("initSam: ","sam can not send attention");
             return null;
         }
+        System.out.println("#RD>>> SAM Attention");
         String samAuth1 = sendAuth1();
         if (samAuth1!=null){
             // log.d("initSam: ","sam auth1 send successfully---"+samAuth1);
@@ -96,6 +103,7 @@ public class Sam {
             // log.d("initSam: ","sam can not send auth1");
             return null;
         }
+        System.out.println("#RD>>> SAM send Auth1");
         String samAuth1Result = checkAuth1Result(samAuth1);
         if (samAuth1Result!=null){
             // log.d("initSam: ","sam auth1 result check successfully---"+samAuth1Result);
@@ -103,6 +111,7 @@ public class Sam {
             // log.d("initSam: ","sam auth1 result check failed");
             return null;
         }
+        System.out.println("#RD>>> SAM check auth1 result");
         String samAuth2 = sendAuth2();
         if (samAuth2!=null){
             // log.d("initSam: ","sam auth2 send successfully---"+samAuth2);
@@ -110,6 +119,7 @@ public class Sam {
             // log.d("initSam: ","sam can not send auth2");
             return null;
         }
+        System.out.println("#RD>>> SAM send auth2");
         String samAuth2Result = checkAuth2Result(samAuth2);
         if (samAuth2Result!=null){
             // log.d("initSam: ","sam auth2 result check successfully---"+samAuth2Result);
@@ -117,18 +127,21 @@ public class Sam {
             // log.d("initSam: ","sam auth2 result check failed");
             return null;
         }
+        System.out.println("#RD>>> SAM check auth2 result");
         return result[0];
     }
 
     public String resetSam() {
         String[] result = BasicOper.dc_cpureset_hex().split("\\|", -1);
-        // log.d("sam_reset", String.format("code :%s,data :%s", result[0], result[1]));
+        String ppsResult = BasicOper.dc_RequestPPS(samSlot,0x15,1);
+//        String volResult = BasicOper.dc_SetCpuVoltage(0);
+        System.out.println("#RD>>> ATR : "+ result[1]);
         return result[0];
     }
 
     public String setToNormalMode() throws SamSyntaxError {
         byte[] sendBuf = new byte[]{(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0xE6, (byte) 0x02, (byte) 0x02};
-        // log.d("sam_setToNormalMode_sendBuff", "data: " + HexDump.dumpHexString(sendBuf));
+//         Log.d("sam_setToNormalMode_sendBuff", "data: " + HexDump.dumpHexString(sendBuf));
         int responseLength = 0xFF;
         return this.transitDataToSam(sendBuf, responseLength);
     }
@@ -226,6 +239,7 @@ public class Sam {
 
     private String transitDataToSam(byte[] sendBuf, int responseLength) throws SamSyntaxError {
 //        byte[] lc = sendBuf.length<=254?new byte[]{(byte) (sendBuf.length&0xFF)}:new byte[]{(byte)((sendBuf.length>>16)&0xFF),(byte)((sendBuf.length>>8)&0xFF),(byte)(sendBuf.length&0xFF)};
+        System.out.println("sam0:");
         byte[] apdu = new byte[]{(byte) 0xA0, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) sendBuf.length};
 //        apdu = mergeArray(apdu,lc);
         // log.d("sam_transitDataToSam_apdu", "apdu: " + HexDump.dumpHexString(apdu));
@@ -237,20 +251,26 @@ public class Sam {
         byte[] le = sendBuf.length<=254?new byte[]{0x00}:new byte[]{0x00,0x00};
         sAPDU = mergeArray(sAPDU,le);*/
         String hexAPDU = Utils.byteToHex(buffer.array());
-        String[] result = BasicOper.dc_TransmitApdu(0xFF,hexAPDU).split("\\|");
-//        String[] result = BasicOper.dc_cpuapduInt_hex(hexAPDU).split("\\|");
-        if (Objects.equals(result[0], "0000")) {
-            byte[] rAPDU = HexDump.hexStringToByteArray(result[1]);
-            if(rAPDU[3]==(byte) 0x7f){
-                throw new SamSyntaxError("Sam syntax error");
-            }
-            if (rAPDU[rAPDU.length - 2] == (byte) 0x90 && rAPDU[rAPDU.length - 1] == (byte) 0x00) {
-                return result[1];
-            } else {
+        try {
+            String[] result = BasicOper.dc_TransmitApdu(0xFF, hexAPDU).split("\\|");
+            System.out.println("SAM_RESPONSE " + result[0]);
+            if (Objects.equals(result[0], "0000")) {
+                byte[] rAPDU = HexDump.hexStringToByteArray(result[1]);
+                if (rAPDU[3] == (byte) 0x7f) {
+                    throw new SamSyntaxError("Sam syntax error");
+                }
+                if (rAPDU[rAPDU.length - 2] == (byte) 0x90 && rAPDU[rAPDU.length - 1] == (byte) 0x00) {
+                    return result[1];
+                } else {
 
+                    return null;
+                }
+            } else {
+                System.out.println("sam2:"+result[1]);
                 return null;
             }
-        } else {
+        }catch (Exception e){
+            e.printStackTrace();
             return null;
         }
     }

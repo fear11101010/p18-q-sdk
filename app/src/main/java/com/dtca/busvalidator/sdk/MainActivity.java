@@ -43,13 +43,14 @@ public class MainActivity extends Activity {
 //        Utils.initializeReader(this);
         Utils.openSerialReader();
         utils = Utils.getInstance();
+
         Utils.initAppDatabase(this);
         utils.initMasterConfig(MASTER_CONFIG_DATA);
         utils.initializeFareMatrix(FARE_MATRIX);
         utils.initializeRouteList(ROUTE);
         utils.setDeviceInfo(DEVICE_INFO);
         initUI();
-        Sam sam = Sam.getInstance(3, this);
+        Sam sam = Sam.getInstance(2, this);
         try {
             sam.initSam();
         } catch (InvalidAlgorithmParameterException e) {
@@ -126,7 +127,7 @@ public class MainActivity extends Activity {
 
 
                         });
-
+                        long st1 = System.currentTimeMillis();
                         RideAndAlight rideAndAlight = new RideAndAlight(felicaCard);
                         rideAndAlight.setType(RideAndAlight.Type.RIDE);
                         rideAndAlight.setDirection(RideAndAlight.Direction.UPSTREAM);
@@ -143,7 +144,7 @@ public class MainActivity extends Activity {
 
 
                         });
-
+                        System.out.println("#RD>>> Card Write Time: "+(System.currentTimeMillis()-st1));
 
                     } catch (Exception e) {
                         e.printStackTrace();
