@@ -389,7 +389,7 @@ public class RideAndAlight {
                 +Utils.byteToHex(storedLogInformation.getPlace1())
                 +Utils.byteToHex(storedLogInformation.getPlace2())
                 +String.format("%04X",Utils.charArrayToIntLE(attributeInfo.getNegativeValue(), 2))
-                +String.format("%04X",Utils.charArrayToIntLE(attributeInfo.getNegativeValue(), 2) - initialNegativeBalance);
+                +String.format("%04X",((Utils.charArrayToIntLE(attributeInfo.getNegativeValue(), 2) - initialNegativeBalance)&0xFFFF));
 
         TransactionData transactionData = TransactionData.builder()
                 .cardId(this.cardId)
