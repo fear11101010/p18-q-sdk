@@ -133,9 +133,9 @@ public class Sam {
 
     public String resetSam() {
         String[] result = BasicOper.dc_cpureset_hex().split("\\|", -1);
-        String ppsResult = BasicOper.dc_RequestPPS(samSlot,0x15,1);
-//        String volResult = BasicOper.dc_SetCpuVoltage(0);
-        System.out.println("#RD>>> ATR : "+ result[1]);
+        System.out.println("#RD>>> ATR Value: "+ result[1]);
+//        String ppsResult = BasicOper.dc_RequestPPS(samSlot,0x15,2);
+//        System.out.println("#RD>>> PPS Result: "+ ppsResult);
         return result[0];
     }
 

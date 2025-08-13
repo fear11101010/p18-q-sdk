@@ -118,6 +118,8 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         if (ret == 0) {
             throw new CardReadException("Can not read card at this moment. please try again later");
         }
+        System.out.println("#RD>>> Card Read Time: "+(System.currentTimeMillis()-st1));
+        long st2 = System.currentTimeMillis();
         populateFelicaCard(Arrays.copyOfRange(readData, 3, readData.length), readLen[0] - 3);
         if (ValidateCard.isMRTCard(felicaCardDetail.getIssuerInfo().getCardIssuerID())) {
             throw new MRTCardNotAllowedException("MRT Card is not allowed");
@@ -150,7 +152,7 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         }
 
         this.currentBalance = Utils.charArrayToIntLE(this.felicaCardDetail.getEPurseInfo().getBinRemainingSV(), 4);
-        System.out.println("#RD>>> Card Read Time: "+(System.currentTimeMillis()-st1));
+        System.out.println("#RD>>> Card Validation Time: "+(System.currentTimeMillis()-st2));
         return 1;
     }
 
