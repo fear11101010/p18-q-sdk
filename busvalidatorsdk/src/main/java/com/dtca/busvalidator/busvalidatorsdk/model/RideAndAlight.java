@@ -22,14 +22,11 @@ import com.dtca.busvalidator.busvalidatorsdk.model.interfac.DataInterface;
 import com.google.gson.Gson;
 
 import java.nio.ByteBuffer;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.Executors;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -376,21 +373,24 @@ public class RideAndAlight {
 //        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMddHHmmss",Locale.ENGLISH);
         int initialBalance = this.type == Type.RIDE ? ride.getInitialBalance() : alight.getInitialBalance();
         int initialNegativeBalance = type == Type.RIDE ? ride.getInitialNegativeBalance() : alight.getInitialNegativeBalance();
-        String metaData = Utils.getDeviceSerialNo()+"."
-                +Utils.byteToHex(felicaCard.getIdi())
-                +String.format("%02X",felicaCardDetail.getIssuerInfo().getRecycleCounter())
-                +Utils.byteToHex(attributeInfo.getTxnDataId())
-                +Utils.byteToHex(new byte[]{storedLogInformation.getServiceClassificationCode(), storedLogInformation.getContextCode()})
-                +dateTimeFormatter.format(localDateTime)
-                +(isProcessed?"00":"01")
-                +Utils.byteToHex(storedLogInformation.getStoredValueLogId())
-                +String.format("%06X",(Utils.convertTwosComplementByteArrayToLittleIndian(storedLogInformation.getCardBalance(),3)&0xFFFFFF))
-                +String.format("%06X",((Utils.charArrayToIntLE(ePurseInfo.getBinRemainingSV(), 4) - initialBalance)&0xFFFFFF))
-                +Utils.byteToHex(storedLogInformation.getPlace1())
-                +Utils.byteToHex(storedLogInformation.getPlace2())
-                +String.format("%04X",Utils.charArrayToIntLE(attributeInfo.getNegativeValue(), 2))
-                +String.format("%04X",Utils.charArrayToIntLE(attributeInfo.getNegativeValue(), 2) - initialNegativeBalance);
-
+        String metaData = Utils.getDeviceSerialNo() + "."
+                + Utils.byteToHex(felicaCard.getIdi())
+                + String.format("%02X", felicaCardDetail.getIssuerInfo().getRecycleCounter())
+                + Utils.byteToHex(attributeInfo.getTxnDataId())
+                + Utils.byteToHex(new byte[]{storedLogInformation.getServiceClassificationCode(), storedLogInformation.getContextCode()})
+                + dateTimeFormatter.format(localDateTime)
+                + (isProcessed ? "00" : "01")
+                + Utils.byteToHex(storedLogInformation.getStoredValueLogId())
+                + Utils.byteToHex(Utils.reverseArray(ePurseInfo.getBinRemainingSV()))
+//                +String.format("%06X",((Utils.charArrayToIntLE(ePurseInfo.getBinRemainingSV(), 4) - initialBalance)&0xFFFFFF))
+                + Utils.byteToHex(Utils.reverseArray(Utils.convertToTwosComplementLE(Utils.charArrayToIntLE(ePurseInfo.getBinRemainingSV(), 4) - initialBalance, 3)))
+                + Utils.byteToHex(storedLogInformation.getPlace1())
+                + Utils.byteToHex(storedLogInformation.getPlace2())
+//                +String.format("%04X",Utils.charArrayToIntLE(attributeInfo.getNegativeValue(), 2))
+                + Utils.byteToHex(Utils.reverseArray(attributeInfo.getNegativeValue()))
+                + Utils.byteToHex(Utils.reverseArray(Utils.convertToTwosComplementLE(Utils.charArrayToIntLE(attributeInfo.getNegativeValue(), 2) - initialNegativeBalance, 2)));
+//                + String.format("%04X", Utils.charArrayToIntLE(attributeInfo.getNegativeValue(), 2) - initialNegativeBalance);
+        Log.d("META DATA: ",metaData);
         TransactionData transactionData = TransactionData.builder()
                 .cardId(this.cardId)
                 .recycleCounter(Utils.byteToHex(new byte[]{felicaCardDetail.getIssuerInfo().getRecycleCounter()}))
@@ -421,9 +421,6 @@ public class RideAndAlight {
                         "card17" : "NA")
                 .metaData(metaData.toUpperCase())
                 .build();
-
-
-
 
 
         dataInterface.receiveTransactionData(transactionData);

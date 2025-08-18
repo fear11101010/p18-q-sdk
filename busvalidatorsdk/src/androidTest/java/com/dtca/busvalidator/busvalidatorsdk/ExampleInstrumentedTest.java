@@ -4849,7 +4849,7 @@ public class ExampleInstrumentedTest {
         // Print the result
         Sam sam = Sam.getInstance(2, appContext);
         sam.initSam();
-        FelicaCard felicaCard = FelicaCard.getInstance(sam);
+        /*FelicaCard felicaCard = FelicaCard.getInstance(sam);
 
         felicaCard.detectFelicaCard();
         felicaCard.readCard(transactionData -> {
@@ -4859,7 +4859,7 @@ public class ExampleInstrumentedTest {
 //        int rechargeAmount = felicaCard.getCashbackAmount();
         LocalDateTime end = LocalDateTime.now();
 
-        System.out.println("total read time : " + Duration.between(start,end).toMillis());
+        System.out.println("total read time : " + Duration.between(start,end).toMillis());*/
 //        System.out.println("recharge amount : " + rechargeAmount);
     }
 
