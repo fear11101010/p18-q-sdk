@@ -1,6 +1,7 @@
 package com.dtca.busvalidator.busvalidatorsdk.model;
 
 import android.os.Build;
+import android.util.Log;
 
 import com.dtca.busvalidator.busvalidatorsdk.FelicaCard;
 import com.dtca.busvalidator.busvalidatorsdk.helper.Utils;
@@ -14,6 +15,7 @@ import java.time.format.DateTimeFormatter;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
 @Data
 @AllArgsConstructor
@@ -51,46 +53,72 @@ public class BlackList {
 
         byte[] blockList = new byte[4];
         int numOfBlock = 2;
-        blockList[0] = (byte) 0x80;
+        blockList[0] = (byte) 0x81;
         blockList[1] = (byte) 0x00;
-        blockList[2] = (byte) 0x80;
+        blockList[2] = (byte) 0x81;
         blockList[3] = (byte) 0x01;
 
         try {
             int i = felicaCard.writeInCard(numOfService,serviceCode,numOfBlock,blockList, attributeInfo.getData());
-            if(i!=1) throw new CardWriteException("An error occur while write in card. Please try again later.");
-            TransactionData transactionData;
-            transactionData = TransactionData.builder()
-                    .cardId(Utils.byteToHex(felicaCard.getIdi()))
-                    .recycleCounter(Utils.byteToHex(new byte[]{felicaCard.getFelicaCardDetail().getIssuerInfo().getRecycleCounter()}))
-                    .transactionDataId(Utils.byteArrayToInt(attributeInfo.getTxnDataId()))
-                    .serviceId("B001")
-                    .dateTimeStamp(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now()))
-                    .cardFunctionCode(Utils.byteArrayToInt(attributeInfo.getCardFunctionCode()))
-                    .cardControlCode(attributeInfo.getCardControlCode() & 0XFF)
-                    .discountCode(attributeInfo.getDiscountCode() & 0XFF)
-                    .cardExpirationDate(Utils.byteToHex(attributeInfo.getExpiryDate()))
-                    .processUnfinishedFlag(0x00)
-                    .deviceSerialNumber(Utils.getDeviceSerialNo())
-                    .svLogId(0x0000)
-                    .svBalance(0x000000)
-                    .svSpent(0x000000)
-                    .processedLocation1("0000")
-                    .processedLocation2("0000")
+            if(i!=1) {
+                sendTransactionData(dataInterface,false);
+                throw new CardWriteException("An error occur while write in card. Please try again later.");
+            }
+            sendTransactionData(dataInterface,true);
 
-                    .statusFlag(0x0000)
-                    .basicFareAmount(0x000000)
-                    .distanceFareAmount(0x000000)
-                    .discountFareAmount(0)
-                    .inStoppage("0000")
-                    .outStoppage("0000")
-                    .negativeValue(0x0000)
-                    .negativeValueUsed(0x0000)
-                    .message("NA")
-                    .build();
-            dataInterface.receiveTransactionData(transactionData);
         } catch (Exception e) {
             throw new CardWriteException("An error occur while write in card. Please try again later.");
         }
+    }
+
+    private void sendTransactionData(@NonNull DataInterface dataInterface, boolean isProcessed){
+        FelicaCardDetail felicaCardDetail = felicaCard.getFelicaCardDetail();
+        LocalDateTime localDateTime = LocalDateTime.now();
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+        String metaData = Utils.getDeviceSerialNo() + "."
+                + Utils.byteToHex(felicaCard.getIdi())
+                + String.format("%02X", felicaCardDetail.getIssuerInfo().getRecycleCounter())
+                + Utils.byteToHex(attributeInfo.getTxnDataId())
+                + "B001"
+                + dateTimeFormatter.format(localDateTime)
+                + (isProcessed ? "00" : "01")
+                + "0000"
+                + "000000"
+                + "000000"
+                + "0000"
+                + "0000"
+                + "0000"
+                + "0000".toUpperCase();
+        Log.d("META DATA: ", metaData);
+        TransactionData transactionData;
+        transactionData = TransactionData.builder()
+                .cardId(Utils.byteToHex(felicaCard.getIdi()))
+                .recycleCounter(Utils.byteToHex(new byte[]{felicaCard.getFelicaCardDetail().getIssuerInfo().getRecycleCounter()}))
+                .transactionDataId(Utils.byteArrayToInt(attributeInfo.getTxnDataId()))
+                .serviceId("B001")
+                .dateTimeStamp(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now()))
+                .cardFunctionCode(Utils.byteArrayToInt(attributeInfo.getCardFunctionCode()))
+                .cardControlCode(attributeInfo.getCardControlCode() & 0XFF)
+                .discountCode(attributeInfo.getDiscountCode() & 0XFF)
+                .cardExpirationDate(Utils.byteToHex(attributeInfo.getExpiryDate()))
+                .processUnfinishedFlag(isProcessed?0x00:0x01)
+                .deviceSerialNumber(Utils.getDeviceSerialNo())
+                .svLogId(0x0000)
+                .svBalance(0x000000)
+                .svSpent(0x000000)
+                .processedLocation1("0000")
+                .processedLocation2("0000")
+
+                .statusFlag(0x0000)
+                .basicFareAmount(0x000000)
+                .distanceFareAmount(0x000000)
+                .discountFareAmount(0)
+                .inStoppage("0000")
+                .outStoppage("0000")
+                .negativeValue(0x0000)
+                .negativeValueUsed(0x0000)
+                .message("NA")
+                .build();
+        dataInterface.receiveTransactionData(transactionData);
     }
 }

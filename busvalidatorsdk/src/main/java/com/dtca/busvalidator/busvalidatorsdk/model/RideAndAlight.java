@@ -367,6 +367,12 @@ public class RideAndAlight {
         0A0130021ECB0210 00 0010 D220 20250811 144041 00 0010 0003E8 FFFFFF D88C 1100 0000 0000 00
 
         0A0130021ECB0210 00 0015 D220 20250811 155228 00 0015 000384 FFFFD8 8C19 0000 0000 0000
+
+        0a0130041ecb020f 00 0018 d220 20250820 123027 00 0018 0004DD FFFFD8 8c1c 0000 0000 0000
+        0a0130041ecb020f 00 0019 d630 20250820 123324 00 0019 0004F1 000014 8c1c 8c19 0000 0000
+
+        0a0130031ecb09bb 00 0041 B001 20250820 133721 00 0000 000000 000000 0000 0000 0000 0000
+
         */
         LocalDateTime localDateTime = LocalDateTime.now();
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
@@ -381,16 +387,14 @@ public class RideAndAlight {
                 + dateTimeFormatter.format(localDateTime)
                 + (isProcessed ? "00" : "01")
                 + Utils.byteToHex(storedLogInformation.getStoredValueLogId())
-                + Utils.byteToHex(Utils.reverseArray(ePurseInfo.getBinRemainingSV()))
-//                +String.format("%06X",((Utils.charArrayToIntLE(ePurseInfo.getBinRemainingSV(), 4) - initialBalance)&0xFFFFFF))
-                + Utils.byteToHex(Utils.reverseArray(Utils.convertToTwosComplementLE(Utils.charArrayToIntLE(ePurseInfo.getBinRemainingSV(), 4) - initialBalance, 3)))
+                + String.format("%06X", Utils.charArrayToIntLE(ePurseInfo.getBinRemainingSV(), 4) & 0XFFFFFF)
+                + String.format("%06X", (Utils.charArrayToIntLE(ePurseInfo.getBinRemainingSV(), 4) - initialBalance) & 0XFFFFFF)
                 + Utils.byteToHex(storedLogInformation.getPlace1())
                 + Utils.byteToHex(storedLogInformation.getPlace2())
-//                +String.format("%04X",Utils.charArrayToIntLE(attributeInfo.getNegativeValue(), 2))
-                + Utils.byteToHex(Utils.reverseArray(attributeInfo.getNegativeValue()))
-                + Utils.byteToHex(Utils.reverseArray(Utils.convertToTwosComplementLE(Utils.charArrayToIntLE(attributeInfo.getNegativeValue(), 2) - initialNegativeBalance, 2)));
-//                + String.format("%04X", Utils.charArrayToIntLE(attributeInfo.getNegativeValue(), 2) - initialNegativeBalance);
-        Log.d("META DATA: ",metaData);
+                + String.format("%04X", Utils.charArrayToIntLE(attributeInfo.getNegativeValue(), 2) & 0XFFFF)
+                + String.format("%04X", (Utils.charArrayToIntLE(attributeInfo.getNegativeValue(), 2) - initialNegativeBalance) & 0xFFFF)
+                .toUpperCase();
+        Log.d("META DATA: ", metaData);
         TransactionData transactionData = TransactionData.builder()
                 .cardId(this.cardId)
                 .recycleCounter(Utils.byteToHex(new byte[]{felicaCardDetail.getIssuerInfo().getRecycleCounter()}))

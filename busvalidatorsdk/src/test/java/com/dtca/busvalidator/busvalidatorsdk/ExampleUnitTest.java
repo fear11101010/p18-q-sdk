@@ -6,6 +6,8 @@ import static org.junit.Assert.*;
 
 import com.dtca.busvalidator.busvalidatorsdk.helper.Utils;
 
+import java.util.Locale;
+
 /**
  * Example local unit test, which will execute on the development machine (host).
  *
@@ -34,6 +36,14 @@ public class ExampleUnitTest {
         System.out.println(bit);
         byte[] result1 = Utils.convertToTwosComplementLE(-Integer.parseInt(Utils.byteToHex(results), 16), 3);
         System.out.println(Utils.convertTwosComplementByteArrayToLittleIndian(result1,3));
+    }
+
+
+    @Test
+    public void intToHex() {
+
+        int i = -128 & 0XFFFFFF;
+        System.out.println(String.format(Locale.ENGLISH,"%06X",i));
     }
 
 
