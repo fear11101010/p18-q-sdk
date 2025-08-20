@@ -118,6 +118,7 @@ public class BlackList {
                 .negativeValue(0x0000)
                 .negativeValueUsed(0x0000)
                 .message("NA")
+                .metaData(metaData)
                 .build();
         dataInterface.receiveTransactionData(transactionData);
     }
