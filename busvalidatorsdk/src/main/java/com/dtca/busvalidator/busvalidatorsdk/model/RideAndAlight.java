@@ -392,7 +392,7 @@ public class RideAndAlight {
                 + String.format("%04X", Utils.charArrayToIntLE(attributeInfo.getNegativeValue(), 2) & 0XFFFF)
                 + String.format("%04X", (Utils.charArrayToIntLE(attributeInfo.getNegativeValue(), 2) - initialNegativeBalance) & 0xFFFF)
                 .toUpperCase();
-        Log.d("META DATA: ", metaData);
+//        Log.d("META DATA: ", metaData);
         TransactionData transactionData = TransactionData.builder()
                 .cardId(this.cardId)
                 .recycleCounter(Utils.byteToHex(new byte[]{felicaCardDetail.getIssuerInfo().getRecycleCounter()}))
