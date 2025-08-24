@@ -1,7 +1,5 @@
 package com.dtca.busvalidator.busvalidatorsdk.model;
 
-import android.util.Log;
-
 import com.dtca.busvalidator.busvalidatorsdk.FelicaCard;
 import com.dtca.busvalidator.busvalidatorsdk.helper.Utils;
 import com.dtca.busvalidator.busvalidatorsdk.helper.ValidateCard;
@@ -338,8 +336,8 @@ public class RideAndAlight {
         } else {
             throw new TypeNotSetException("No type set");
         }
-        long eTime = System.currentTimeMillis();
-        Log.d("writeData_time", "writeData_time: " + ((double) (eTime - sTime)) / 1000);
+//        long eTime = System.currentTimeMillis();
+        System.out.println("#RD>>> Card Write Time: "+(System.currentTimeMillis()-sTime));
     }
 
     private void sendTransactionData(@NonNull DataInterface dataInterface, boolean isProcessed) {

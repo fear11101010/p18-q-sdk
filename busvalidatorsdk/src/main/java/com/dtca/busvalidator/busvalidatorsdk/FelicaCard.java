@@ -80,13 +80,14 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
     }
 
     public void detectFelicaCard() throws Exception {
-
+        long st1 = System.currentTimeMillis();
         String[] result = BasicOper.dc_FeliCaReset().split("\\|", -1);
         if (result.length>=3 && result[0].equals("0000") && Utils.hexToByte(result[2]).length >=18) {
             this.iDm = Arrays.copyOfRange(Utils.hexToByte(result[2]), 0, 8);
             this.pMm = Arrays.copyOfRange(Utils.hexToByte(result[2]), 8, 16);
             this.systemCode = Arrays.copyOfRange(Utils.hexToByte(result[2]), 16, 18);
-            // log.d("IDm", Utils.byteToHex(iDm));
+
+            System.out.println("#RD>>> Card Detect Time: "+(System.currentTimeMillis()-st1));
         } else {
 //            BasicOper.dc_FeliCaReset();
             result = BasicOper.dc_FeliCaApdu("0600FFFF0100").split("\\|", -1);
@@ -108,6 +109,7 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
     }
 
     public int readCard(DataInterface dataInterface) throws Exception {
+        long st1 = System.currentTimeMillis();
         byte[] readData = new byte[256];
         int[] readLen = new int[1];
 
@@ -116,6 +118,8 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         if (ret == 0) {
             throw new CardReadException("Can not read card at this moment. please try again later");
         }
+        System.out.println("#RD>>> Card Read Time: "+(System.currentTimeMillis()-st1));
+        long st2 = System.currentTimeMillis();
         populateFelicaCard(Arrays.copyOfRange(readData, 3, readData.length), readLen[0] - 3);
         if (ValidateCard.isMRTCard(felicaCardDetail.getIssuerInfo().getCardIssuerID())) {
             throw new MRTCardNotAllowedException("MRT Card is not allowed");
@@ -148,7 +152,7 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         }
 
         this.currentBalance = Utils.charArrayToIntLE(this.felicaCardDetail.getEPurseInfo().getBinRemainingSV(), 4);
-
+        System.out.println("#RD>>> Card Validation Time: "+(System.currentTimeMillis()-st2));
         return 1;
     }
 

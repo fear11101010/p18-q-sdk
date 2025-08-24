@@ -2993,7 +2993,7 @@ public class ExampleInstrumentedTest {
                 "    ]\n" +
                 "  }\n" +
                 "]";
-        String DEVICE_INFO = "{\"id\":1,\"deviceSerialNumber\":\"00012700202401000009\",\"activeFlag\":true,\"operatorCode\":\"0A0B\",\"equipmentClassificationCode\":\"42\",\"stationCode\":\"1011\",\"equipmentLocationNumber\":\"0101\",\"passkey\":\"$2a$10$Z9U.xysztj6Mi8e..z8V4exk74ocJqS7n6jA4nUawb.MsFo2wnw72\",\"pairedEquipmentLocationNumber\":[\"0102\"],\"ipAddress\":\"192.168.191.168\",\"port\":5000,\"downloadPath\":\"/data/export\",\"uploadPath\":\"/data\"}";
+        String DEVICE_INFO = "{\"id\":1,\"deviceSerialNumber\":\"00012700202401000016\",\"activeFlag\":true,\"operatorCode\":\"0A0B\",\"equipmentClassificationCode\":\"42\",\"stationCode\":\"1011\",\"equipmentLocationNumber\":\"0101\",\"passkey\":\"$2a$10$Z9U.xysztj6Mi8e..z8V4exk74ocJqS7n6jA4nUawb.MsFo2wnw72\",\"pairedEquipmentLocationNumber\":[\"0102\"],\"ipAddress\":\"192.168.191.168\",\"port\":5000,\"downloadPath\":\"/data/export\",\"uploadPath\":\"/data\"}";
         String MASTER_CONFIG_DATA = "[{\"id\":1,\"configName\":\"MINIMUM_RIDE_BALANCE\",\"value\":\"10\",\"remarks\":\"minimum amount validations for ride in taka\"},{\"id\":2,\"configName\":\"MINIMUM_CANCEL_OF_ENTRY_TIME\",\"value\":\"10\",\"remarks\":\"time in minutes for valid cancel of entry \"},{\"id\":3,\"configName\":\"ALIGHT_EXPIRY_TIME\",\"value\":\"240\",\"remarks\":\"Time in minutes after this time; once a ride occurs, it won't wait for alight, and the next tap will be considered a ride instead of waiting for alight.\"}]";
 
         Utils utils = Utils.getInstance();
@@ -3030,7 +3030,7 @@ public class ExampleInstrumentedTest {
         RideAndAlight rideAndAlight = new RideAndAlight(felicaCard);
         rideAndAlight.setFareMatrix(Utils.getInstance().fareMatrix);
         rideAndAlight.setDirection( RideAndAlight.Direction.UPSTREAM);
-        rideAndAlight.setStation(new Gson().toJson(Utils.getInstance().fareMatrix.getStations().get(3)));
+        rideAndAlight.setStation(new Gson().toJson(Utils.getInstance().fareMatrix.getStations().get(0)));
         rideAndAlight.writeData(transactionData -> {
             Log.d("ride alight: ",new Gson().toJson(transactionData));
         });
@@ -4849,14 +4849,20 @@ public class ExampleInstrumentedTest {
         // Print the result
         Sam sam = Sam.getInstance(2, appContext);
         sam.initSam();
+        /*FelicaCard felicaCard = FelicaCard.getInstance(sam);
+
+        felicaCard.detectFelicaCard();
+        felicaCard.readCard(transactionData -> {
+
+        });*/
+        LocalDateTime start = LocalDateTime.now();
+//        int rechargeAmount = felicaCard.getCashbackAmount();
         FelicaCard felicaCard = FelicaCard.getInstance(sam);
 
         felicaCard.detectFelicaCard();
         felicaCard.readCard(transactionData -> {
 
         });
-        LocalDateTime start = LocalDateTime.now();
-//        int rechargeAmount = felicaCard.getCashbackAmount();
         LocalDateTime end = LocalDateTime.now();
 
         System.out.println("total read time : " + Duration.between(start,end).toMillis());
