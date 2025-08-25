@@ -458,7 +458,13 @@ public class RideAndAlight {
         if (direction != null) {
             Utils.updateCardDirection(Utils.byteToHex(felicaCard.getIdi()), direction);
         }
-        this.place1 = Utils.byteToHex(gateAccessLogInformation.getCurrentStationCode());
+        TripsEntity tripsEntity = Utils.getTripsByCardId(Utils.byteToHex(felicaCard.getIdi()));
+        if(tripsEntity != null && tripsEntity.fromStation != null){
+            this.place1 = tripsEntity.fromStation;
+        }
+        else {
+            this.place1 = Utils.byteToHex(gateAccessLogInformation.getCurrentStationCode());
+        }
         this.alight = new Alight(felicaCardDetail);
         this.alight.setStation(station);
     }
@@ -671,7 +677,11 @@ public class RideAndAlight {
             this.initialNegativeBalance = Utils.charArrayToIntLE(attributeInfo.getNegativeValue(), 2);
             this.serviceId = Utils.getServiceId(storedLogInformation);
             if (Arrays.stream(new String[]{"d220", "d320"}).noneMatch(s -> s.equalsIgnoreCase(serviceId))) {
-                this.cashbackAmount = felicaCard.getCashbackAmount();
+                TripsEntity tripsEntity = Utils.getTripsByCardId(Utils.byteToHex(felicaCard.getIdi()));
+//                this.cashbackAmount = felicaCard.getCashbackAmount();
+                if(tripsEntity != null){
+                    this.cashbackAmount = tripsEntity.cashBackAmount;
+                }
             } else {
                 this.cashbackAmount = Utils.charArrayToIntLE(ePurseInfo.getBinCashbackData(), 4);
             }
