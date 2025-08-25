@@ -1,6 +1,7 @@
 package com.dtca.busvalidator.busvalidatorsdk.model;
 
 import com.dtca.busvalidator.busvalidatorsdk.FelicaCard;
+import com.dtca.busvalidator.busvalidatorsdk.db.entity.TripsEntity;
 import com.dtca.busvalidator.busvalidatorsdk.helper.Utils;
 import com.dtca.busvalidator.busvalidatorsdk.helper.ValidateCard;
 import com.dtca.busvalidator.busvalidatorsdk.model.exception.AlightNotAllowedException;
@@ -315,6 +316,18 @@ public class RideAndAlight {
         blockNumberList[9] = (byte) 0x00;
         blockNumberList[10] = (byte) 0x86; // Gate access log file (for transfer)
         blockNumberList[11] = (byte) 0x00;
+        /*blockNumberList[0] = (byte) 0x80; // Attribute information file
+        blockNumberList[1] = (byte) 0x00;
+        blockNumberList[2] = (byte) 0x80;
+        blockNumberList[3] = (byte) 0x01;
+        blockNumberList[4] = (byte) 0x81; // e-Purse  file
+        blockNumberList[5] = (byte) 0x00;
+        blockNumberList[6] = (byte) 0x82; // Stored value log information file
+        blockNumberList[7] = (byte) 0x00;
+        blockNumberList[8] = (byte) 0x83; // Gate access log file
+        blockNumberList[9] = (byte) 0x00;
+        blockNumberList[10] = (byte) 0x84; // Gate access log file (for transfer)
+        blockNumberList[11] = (byte) 0x00;*/
 //        blockNumberList[12] = (byte) 0x84;
 //        blockNumberList[13] = (byte) 0x01;
         if (type == Type.RIDE) {
@@ -713,6 +726,13 @@ public class RideAndAlight {
 
         private void updateStoredValueLog() {
             assert storedLogInformation != null;
+            String serviceId = String.format("%02X%02X",storedLogInformation.getServiceClassificationCode(), storedLogInformation.getContextCode());
+            if(!Arrays.asList(RIDE_AND_DEDUCTION_FROM_SV_NOT_NEGATIVE,RIDE_AND_DEDUCTION_FROM_SV_NEGATIVE).contains(serviceId.toUpperCase())){
+                TripsEntity tripsEntity = Utils.getTripsByCardId(Utils.byteToHex(felicaCard.getIdi()));
+                if(tripsEntity!=null && tripsEntity.fromStation!=null){
+                    storedLogInformation.setPlace1(Utils.hexToByte(tripsEntity.fromStation));
+                }
+            }
             storedLogInformation.setEquipmentClassificationCode((byte) 0x42);
             storedLogInformation.setContextCode((byte) 0x30);
             storedLogInformation.setPaymentMethodCode((byte) 0x00);

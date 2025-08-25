@@ -4823,14 +4823,15 @@ public class ExampleInstrumentedTest {
         Utils.openSerialReader();
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
         // Print the result
-        Sam sam = Sam.getInstance(3, appContext);
+        Sam sam = Sam.getInstance(2, appContext);
         sam.initSam();
         FelicaCard felicaCard = FelicaCard.getInstance(sam);
 
         felicaCard.detectFelicaCard();
-        /*felicaCard.readCard(transactionData -> {
+        felicaCard.readCard(transactionData -> {
 
-        });*/
+        });
+        StoredLogInformation storedLogInformation = felicaCard.getFelicaCardDetail().getStoredLogInformation();
         LocalDateTime start = LocalDateTime.now();
         int rechargeAmount = felicaCard.getCashbackAmount();
         LocalDateTime end = LocalDateTime.now();
@@ -4844,10 +4845,11 @@ public class ExampleInstrumentedTest {
     public void readCard() throws Exception {
 
 
-        Utils.openSerialReader();
+
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
         // Print the result
         Sam sam = Sam.getInstance(2, appContext);
+        Utils.openSerialReader();
         sam.initSam();
         /*FelicaCard felicaCard = FelicaCard.getInstance(sam);
 

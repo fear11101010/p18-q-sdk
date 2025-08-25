@@ -180,7 +180,7 @@ public class MainActivity extends Activity {
                         rideAndAlight.setType(RideAndAlight.Type.ALIGHT);
                         rideAndAlight.setDirection(RideAndAlight.Direction.UPSTREAM);
                         rideAndAlight.setFareMatrix(utils.fareMatrix);
-                        rideAndAlight.setStation(new Gson().toJson(utils.fareMatrix.getStations().get(1)));
+                        rideAndAlight.setStation(new Gson().toJson(utils.fareMatrix.getStations().get(3)));
 
                         rideAndAlight.writeData(new DataInterface() {
                             @Override

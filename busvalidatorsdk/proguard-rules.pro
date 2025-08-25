@@ -42,7 +42,7 @@
     public *;
 }
 
-
+-keep class com.decard.driver.usb.UsbPortJManage { *; }
 
 -keep class * {
     static <fields>;

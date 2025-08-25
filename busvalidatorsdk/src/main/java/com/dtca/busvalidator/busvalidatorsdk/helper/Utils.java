@@ -301,6 +301,25 @@ public class Utils {
         this.cardList.clear();
     }
 
+    public Integer getFare(StoredLogInformation storedLogInformation,byte[] idi) {
+        String serviceId = String.format("%02X%02X",storedLogInformation.getServiceClassificationCode(), storedLogInformation.getContextCode());
+        if(!Arrays.asList("D220","D320").contains(serviceId.toUpperCase())){
+            TripsEntity tripsEntity = Utils.getTripsByCardId(Utils.byteToHex(idi));
+            if(tripsEntity!=null && tripsEntity.fromStation!=null){
+                storedLogInformation.setPlace1(Utils.hexToByte(tripsEntity.fromStation));
+            }
+        }
+        String station1 = Utils.byteToHex(storedLogInformation.getPlace1()).toUpperCase();
+        String station2 = Utils.byteToHex(storedLogInformation.getPlace2()).toUpperCase();
+        try {
+            if(ValidateCard.isCircularRoute(station1) && station1.equalsIgnoreCase(station2)) {
+                return Objects.requireNonNull(Utils.getInstance().fareMatrix.getFareMatrix().get(station1)).get("maxFareUpStream");
+            }
+        } catch (RouteNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        return Objects.requireNonNull(Utils.getInstance().fareMatrix.getFareMatrix().get(station1)).get(station2);
+    }
     public Integer getFare(StoredLogInformation storedLogInformation) {
         String station1 = Utils.byteToHex(storedLogInformation.getPlace1()).toUpperCase();
         String station2 = Utils.byteToHex(storedLogInformation.getPlace2()).toUpperCase();

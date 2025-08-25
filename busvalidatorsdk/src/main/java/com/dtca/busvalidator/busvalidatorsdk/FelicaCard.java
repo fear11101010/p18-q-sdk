@@ -82,24 +82,23 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
     public void detectFelicaCard() throws Exception {
         long st1 = System.currentTimeMillis();
         String[] result = BasicOper.dc_FeliCaReset().split("\\|", -1);
-        if (result.length>=3 && result[0].equals("0000") && Utils.hexToByte(result[2]).length >=18) {
+        if (result.length >= 3 && result[0].equals("0000") && Utils.hexToByte(result[2]).length >= 18) {
             this.iDm = Arrays.copyOfRange(Utils.hexToByte(result[2]), 0, 8);
             this.pMm = Arrays.copyOfRange(Utils.hexToByte(result[2]), 8, 16);
             this.systemCode = Arrays.copyOfRange(Utils.hexToByte(result[2]), 16, 18);
 
-            System.out.println("#RD>>> Card Detect Time: "+(System.currentTimeMillis()-st1));
+            System.out.println("#RD>>> Card Detect Time: " + (System.currentTimeMillis() - st1));
         } else {
 //            BasicOper.dc_FeliCaReset();
             result = BasicOper.dc_FeliCaApdu("0600FFFF0100").split("\\|", -1);
-            if(result[0].equals("0000") && !TextUtils.isEmpty(result[1])){
+            if (result[0].equals("0000") && !TextUtils.isEmpty(result[1])) {
                 byte[] hexToByte = Utils.hexToByte(result[1]);
-                if(hexToByte.length>=19){
-                    byte[] bytes = Arrays.copyOfRange(hexToByte,2,hexToByte.length);
+                if (hexToByte.length >= 19) {
+                    byte[] bytes = Arrays.copyOfRange(hexToByte, 2, hexToByte.length);
                     this.iDm = Arrays.copyOfRange(bytes, 0, 8);
                     this.pMm = Arrays.copyOfRange(bytes, 8, 16);
                     this.systemCode = Arrays.copyOfRange(bytes, 16, 18);
-                }
-                else {
+                } else {
                     throw new CardNotFoundException("No Card Detected. Please tap card");
                 }
             }
@@ -118,7 +117,7 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         if (ret == 0) {
             throw new CardReadException("Can not read card at this moment. please try again later");
         }
-        System.out.println("#RD>>> Card Read Time: "+(System.currentTimeMillis()-st1));
+        System.out.println("#RD>>> Card Read Time: " + (System.currentTimeMillis() - st1));
         long st2 = System.currentTimeMillis();
         populateFelicaCard(Arrays.copyOfRange(readData, 3, readData.length), readLen[0] - 3);
         if (ValidateCard.isMRTCard(felicaCardDetail.getIssuerInfo().getCardIssuerID())) {
@@ -152,7 +151,7 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         }
 
         this.currentBalance = Utils.charArrayToIntLE(this.felicaCardDetail.getEPurseInfo().getBinRemainingSV(), 4);
-        System.out.println("#RD>>> Card Validation Time: "+(System.currentTimeMillis()-st2));
+        System.out.println("#RD>>> Card Validation Time: " + (System.currentTimeMillis() - st2));
         return 1;
     }
 
@@ -350,8 +349,8 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
 //            return 0;
 //        }
 //        long st = System.currentTimeMillis();
-          int ret = writeBlockData(blockNum, blockNum * 2, blockList, blockData);
-//        int ret = writeBlockData(blockNum, blockNum * 2, blockList, blockData);
+//        ret = writeBlockData(blockNum, blockNum * 2, blockList, blockData);
+        int ret = writeBlockData(blockNum, blockNum * 2, blockList, blockData);
         if (ret == 0) {
             return 0;
         }
@@ -1028,7 +1027,7 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
                 history.setAmount(history.getBalance() - transactionHistory.getBalance());
             }
         } catch (Exception e) {
-            Log.d("cashback", "getCashbackAmount: ",e);
+            Log.d("cashback", "getCashbackAmount: ", e);
             return 0;
         }
 
@@ -1051,7 +1050,7 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
                 if (Arrays.stream(new String[]{"d220", "d320"}).anyMatch(s -> s.equalsIgnoreCase(serviceId))) {
                     TransactionHistory rideTransaction = transactionHistories.get(i);
                     int cashBackAmount = 0;
-                    if (serviceId.equalsIgnoreCase("d220") || history.getBalance()>0) {
+                    if (serviceId.equalsIgnoreCase("d220") || history.getBalance() > 0) {
                         cashBackAmount = Math.abs(rideTransaction.getAmount());
 //                        cashBackAmount = Math.abs(rideTransaction.getAmount()) +
 //                                history.getBalance() - rideTransaction.getBalance();
@@ -1059,8 +1058,8 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
                    /* else if(history.getBalance()>0){
                         cashBackAmount = Math.abs(transactionHistories.get(i+1).getBalance()) - rideTransaction.getBalance();
                     }*/
-                    else{
-                        cashBackAmount = Math.abs(transactionHistories.get(i+1).getBalance()) +
+                    else {
+                        cashBackAmount = Math.abs(transactionHistories.get(i + 1).getBalance()) +
                                 history.getBalance() - rideTransaction.getBalance();
                     }
                     System.out.println("amount: " + cashBackAmount);
