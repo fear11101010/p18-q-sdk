@@ -4832,6 +4832,7 @@ public class ExampleInstrumentedTest {
 
         });
         StoredLogInformation storedLogInformation = felicaCard.getFelicaCardDetail().getStoredLogInformation();
+        List<StoredLogInformation> storedLogInformationList = felicaCard.getFelicaCardDetail().getStoredLogInformationList();
         LocalDateTime start = LocalDateTime.now();
         int rechargeAmount = felicaCard.getCashbackAmount();
         LocalDateTime end = LocalDateTime.now();

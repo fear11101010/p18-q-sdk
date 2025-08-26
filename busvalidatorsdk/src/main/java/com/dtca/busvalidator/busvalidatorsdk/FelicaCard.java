@@ -177,8 +177,9 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         EPurseInfo ePurseInfo = EPurseInfo.generateData(Arrays.copyOfRange(bytes, 16 * 3, 16 * 4));
         OperatorInfo operatorInfo = OperatorInfo.generateData(Arrays.copyOfRange(bytes, 16 * 4, 16 * 5));
         StoredLogInformation storedLogInformation = StoredLogInformation.generateData(Arrays.copyOfRange(bytes, 16 * 5, 16 * 6));
-        GateAccessLogInformation gateAccessLogInformation = GateAccessLogInformation.generateData(Arrays.copyOfRange(bytes, 16 * 6, 16 * 7));
-        GateAccessLogInformationForTransfer gateAccessLogInformationForTransfer = GateAccessLogInformationForTransfer.generateData(Arrays.copyOfRange(bytes, 16 * 7, 16 * 8));
+        List<StoredLogInformation> storedLogInformationList = getStoredLogInformationList(Arrays.copyOfRange(bytes, 16 * 5, 16 * 8));
+        GateAccessLogInformation gateAccessLogInformation = GateAccessLogInformation.generateData(Arrays.copyOfRange(bytes, 16 * 8, 16 * 9));
+        GateAccessLogInformationForTransfer gateAccessLogInformationForTransfer = GateAccessLogInformationForTransfer.generateData(Arrays.copyOfRange(bytes, 16 * 9, 16 * 10));
 
         /*StoredLogInformation storedLogInformation = StoredLogInformation.generateData(Arrays.copyOfRange(openBlockData, 0, 16));
         GateAccessLogInformation gateAccessLogInformation = GateAccessLogInformation.generateData(Arrays.copyOfRange(openBlockData, 16, 16 * 2));
@@ -205,8 +206,16 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         }*/
 
         this.felicaCardDetail = new FelicaCardDetail(issuerInfo, attributeInfo, ePurseInfo,
-                operatorInfo, storedLogInformation, gateAccessLogInformation, gateAccessLogInformationForTransfer);
+                operatorInfo, storedLogInformation, storedLogInformationList,gateAccessLogInformation, gateAccessLogInformationForTransfer);
 
+    }
+
+    public List<StoredLogInformation> getStoredLogInformationList(byte[] bytes) {
+        List<StoredLogInformation> storedLogInformationList = new ArrayList<>();
+        for(int i = 0;i < bytes.length;i += 16){
+            storedLogInformationList.add(StoredLogInformation.generateData(Arrays.copyOfRange(bytes,i,i+16)));
+        }
+        return storedLogInformationList;
     }
 
     private void populateFelicaCardForTransactionHistory(byte[] data, int len, DataInterface dataInterface) throws Exception {
@@ -478,7 +487,7 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         Log.d("mutual_auth_time", "mutual auth time: " + (et - st));
         st = System.currentTimeMillis();
 
-        blockNum = 8;
+        blockNum = 10;
         blockList[0] = (byte) 0x80;    //file 1, issuer file
         blockList[1] = 0x00;    //0th block
         /*blockList[2] = (byte) 0x81;    //file 2, personal info
@@ -499,10 +508,14 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         blockList[9] = 0x00;    //0th block
         blockList[10] = (byte) 0x84;    //file 6, History file
         blockList[11] = 0x00;    //0th block
-        blockList[12] = (byte) 0x85;    //file 7, Gate Access Log file
-        blockList[13] = 0x00;    //0th block
-        blockList[14] = (byte) 0x86;    //file 7, Gate Access Log for transfer file
-        blockList[15] = 0x00;    //0th block
+        blockList[12] = (byte) 0x84;    //file 6, History file
+        blockList[13] = 0x01;    //1th block
+        blockList[14] = (byte) 0x84;    //file 6, History file
+        blockList[15] = 0x02;    //2th block
+        blockList[16] = (byte) 0x85;    //file 7, Gate Access Log file
+        blockList[17] = 0x00;    //0th block
+        blockList[18] = (byte) 0x86;    //file 7, Gate Access Log for transfer file
+        blockList[19] = 0x00;    //0th block
 
         // log.d("readFiles_time", "readFiles: ----- "+(eTime-sTime));
 //        blockList[16] = (byte) 0x86;    //file 7, Gate Access Log for transfer file
@@ -963,108 +976,12 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
 
 
     public int getCashbackAmount() {
-        List<TransactionHistory> transactionHistories = new ArrayList<>();
-
-        byte command = (byte) 0x06;
-
-        byte[] idm = getIDm();
-
-        byte[] serviceCode = {(byte) 0x0F, (byte) 0x22};
-        int[] felicaResLen;
-        byte[] felicaResBuf;
-
-
-        felicaResLen = new int[1];
-        felicaResBuf = new byte[256];
-
-        ByteBuffer byteBuffer = ByteBuffer.allocate(20);
-        for (int k = 0; k < 10; k++) {
-            byteBuffer.put(new byte[]{(byte) 0x80, (byte) k});
-        }
-        byte[] block = byteBuffer.array();
-        byteBuffer.clear();
-        byte[] readCommand = new byte[33];
-        readCommand[0] = command;
-        System.arraycopy(idm, 0, readCommand, 1, idm.length);
-        readCommand[9] = 0x01;
-        System.arraycopy(serviceCode, 0, readCommand, 10, serviceCode.length);
-        readCommand[12] = 10;
-        System.arraycopy(block, 0, readCommand, 13, block.length);
-        try {
-            detectFelicaCard();
-            int res = transmitDataToFeliCaCard(readCommand.length, readCommand, felicaResLen, felicaResBuf);
-            if (res == 0) {
-//                    getTransactionHistoryWithoutAuth();
-                throw new CardReadException("Can not read card at this moment.Please try again later");
-            }
-            byte[] bytes = Arrays.copyOfRange(felicaResBuf, 12, felicaResLen[0]);
-            // log.d("getTransactionHistoryWithoutAuth", "getTransactionHistoryWithoutAuth: " + bytes.length);
-            int j = 0;
-            for (; j < bytes.length; j += 16) {
-                StoredLogInformation storedLogInformation = StoredLogInformation.generateData(Arrays.copyOfRange(bytes, j, j + 16));
-//                String classificationCode = String.format("%02X", storedLogInformation.getServiceClassificationCode());
-//                String contextCode = String.format("%02X", storedLogInformation.getContextCode());
-                String operationName = getOperationName(Utils.getServiceId(storedLogInformation));
-                if (Utils.byteToHex(storedLogInformation.getStoredValueLogId()).equals("0000")) {
-                    break;
-                }
-                TransactionHistory transactionHistory = new TransactionHistory();
-                System.out.println("balance ----- " + Utils.convertByteArrayToBit(storedLogInformation.getCardBalance()));
-                transactionHistory.setBalance(Utils.convertTwosComplementByteArrayToLittleIndian(storedLogInformation.getCardBalance(), 3));
-                transactionHistory.setDate(getDate(storedLogInformation.getDate()));
-
-                transactionHistory.setOperation(operationName);
-                transactionHistory.setServiceId(Utils.getServiceId(storedLogInformation));
-
-
-                transactionHistories.add(transactionHistory);
-                int l = transactionHistories.size();
-                if (l == 1) {
-                    transactionHistory.setAmount(0);
-                    continue;
-                }
-                TransactionHistory history = transactionHistories.get(l - 2);
-                history.setAmount(history.getBalance() - transactionHistory.getBalance());
-            }
-        } catch (Exception e) {
-            Log.d("cashback", "getCashbackAmount: ", e);
-            return 0;
-        }
-
-        /*for (int i = 0; i < transactionHistories.size(); i++) {
-            TransactionHistory history = transactionHistories.get(i);
-            if (i == 0) {
-                transactionHistories.get(0).setAmount(0);
-            } else {
-                int amount = transactionHistories.get(i - 1).getBalance() - history.getBalance();
-                transactionHistories.get(i - 1).setAmount(amount);
-            }
-        }*/
-
-
-        TransactionHistory history = transactionHistories.get(0);
-        int i = 0;
-        if (Arrays.stream(new String[]{"6002", "9202"}).anyMatch(s -> s.equalsIgnoreCase(history.getServiceId()))) {
-            while (++i < transactionHistories.size()) {
-                String serviceId = transactionHistories.get(i).getServiceId();
-                if (Arrays.stream(new String[]{"d220", "d320"}).anyMatch(s -> s.equalsIgnoreCase(serviceId))) {
-                    TransactionHistory rideTransaction = transactionHistories.get(i);
-                    int cashBackAmount = 0;
-                    if (serviceId.equalsIgnoreCase("d220") || history.getBalance() > 0) {
-                        cashBackAmount = Math.abs(rideTransaction.getAmount());
-//                        cashBackAmount = Math.abs(rideTransaction.getAmount()) +
-//                                history.getBalance() - rideTransaction.getBalance();
-                    }
-                   /* else if(history.getBalance()>0){
-                        cashBackAmount = Math.abs(transactionHistories.get(i+1).getBalance()) - rideTransaction.getBalance();
-                    }*/
-                    else {
-                        cashBackAmount = Math.abs(transactionHistories.get(i + 1).getBalance()) +
-                                history.getBalance() - rideTransaction.getBalance();
-                    }
-                    System.out.println("amount: " + cashBackAmount);
-                    return cashBackAmount;
-                }
+        List<StoredLogInformation> storedLogInformationList = felicaCardDetail.getStoredLogInformationList();
+        for(int i = 0;i < storedLogInformationList.size();i++){
+            String serviceId = String.format("%02X%02X",storedLogInformationList.get(i).getServiceClassificationCode(),
+                    storedLogInformationList.get(i).getContextCode());
+            if(Arrays.asList("D220","D320").contains(serviceId.toUpperCase()) && i+1 < storedLogInformationList.size()){
+                return Utils.convertTwosComplementByteArrayToLittleIndian(storedLogInformationList.get(i+1).getCardBalance(),3);
             }
         }
 

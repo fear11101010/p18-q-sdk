@@ -1,5 +1,7 @@
 package com.dtca.busvalidator.busvalidatorsdk.model;
 
+import java.util.List;
+
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
@@ -13,6 +15,7 @@ public class FelicaCardDetail {
     private final EPurseInfo ePurseInfo;
     private final OperatorInfo operatorInfo;
     private final StoredLogInformation storedLogInformation;
+    private final List<StoredLogInformation> storedLogInformationList;
     private final GateAccessLogInformation gateAccessLogInformation;
     private final GateAccessLogInformationForTransfer gateAccessLogInformationForTransfer;
 }
