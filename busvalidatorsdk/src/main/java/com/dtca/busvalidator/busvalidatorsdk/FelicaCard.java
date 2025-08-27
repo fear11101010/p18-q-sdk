@@ -177,9 +177,9 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         EPurseInfo ePurseInfo = EPurseInfo.generateData(Arrays.copyOfRange(bytes, 16 * 3, 16 * 4));
         OperatorInfo operatorInfo = OperatorInfo.generateData(Arrays.copyOfRange(bytes, 16 * 4, 16 * 5));
         StoredLogInformation storedLogInformation = StoredLogInformation.generateData(Arrays.copyOfRange(bytes, 16 * 5, 16 * 6));
-        List<StoredLogInformation> storedLogInformationList = getStoredLogInformationList(Arrays.copyOfRange(bytes, 16 * 5, 16 * 8));
-        GateAccessLogInformation gateAccessLogInformation = GateAccessLogInformation.generateData(Arrays.copyOfRange(bytes, 16 * 8, 16 * 9));
-        GateAccessLogInformationForTransfer gateAccessLogInformationForTransfer = GateAccessLogInformationForTransfer.generateData(Arrays.copyOfRange(bytes, 16 * 9, 16 * 10));
+        List<StoredLogInformation> storedLogInformationList = getStoredLogInformationList(Arrays.copyOfRange(bytes, 16 * 5, 16 * 10));
+        GateAccessLogInformation gateAccessLogInformation = GateAccessLogInformation.generateData(Arrays.copyOfRange(bytes, 16 * 10, 16 * 11));
+        GateAccessLogInformationForTransfer gateAccessLogInformationForTransfer = GateAccessLogInformationForTransfer.generateData(Arrays.copyOfRange(bytes, 16 * 11, 16 * 12));
 
         /*StoredLogInformation storedLogInformation = StoredLogInformation.generateData(Arrays.copyOfRange(openBlockData, 0, 16));
         GateAccessLogInformation gateAccessLogInformation = GateAccessLogInformation.generateData(Arrays.copyOfRange(openBlockData, 16, 16 * 2));
@@ -487,7 +487,7 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         Log.d("mutual_auth_time", "mutual auth time: " + (et - st));
         st = System.currentTimeMillis();
 
-        blockNum = 10;
+        blockNum = 12;
         blockList[0] = (byte) 0x80;    //file 1, issuer file
         blockList[1] = 0x00;    //0th block
         /*blockList[2] = (byte) 0x81;    //file 2, personal info
@@ -512,10 +512,14 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         blockList[13] = 0x01;    //1th block
         blockList[14] = (byte) 0x84;    //file 6, History file
         blockList[15] = 0x02;    //2th block
-        blockList[16] = (byte) 0x85;    //file 7, Gate Access Log file
-        blockList[17] = 0x00;    //0th block
-        blockList[18] = (byte) 0x86;    //file 7, Gate Access Log for transfer file
-        blockList[19] = 0x00;    //0th block
+        blockList[16] = (byte) 0x84;    //file 6, History file
+        blockList[17] = 0x03;    //3th block
+        blockList[18] = (byte) 0x84;    //file 6, History file
+        blockList[19] = 0x04;    //2th block
+        blockList[20] = (byte) 0x85;    //file 7, Gate Access Log file
+        blockList[21] = 0x00;    //0th block
+        blockList[22] = (byte) 0x86;    //file 7, Gate Access Log for transfer file
+        blockList[23] = 0x00;    //0th block
 
         // log.d("readFiles_time", "readFiles: ----- "+(eTime-sTime));
 //        blockList[16] = (byte) 0x86;    //file 7, Gate Access Log for transfer file

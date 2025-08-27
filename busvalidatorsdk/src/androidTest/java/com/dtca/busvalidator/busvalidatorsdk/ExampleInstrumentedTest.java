@@ -4831,14 +4831,13 @@ public class ExampleInstrumentedTest {
         felicaCard.readCard(transactionData -> {
 
         });
-        StoredLogInformation storedLogInformation = felicaCard.getFelicaCardDetail().getStoredLogInformation();
-        List<StoredLogInformation> storedLogInformationList = felicaCard.getFelicaCardDetail().getStoredLogInformationList();
+//        StoredLogInformation storedLogInformation = felicaCard.getFelicaCardDetail().getStoredLogInformation();
+//        List<StoredLogInformation> storedLogInformationList = felicaCard.getFelicaCardDetail().getStoredLogInformationList();
         LocalDateTime start = LocalDateTime.now();
         int rechargeAmount = felicaCard.getCashbackAmount();
         LocalDateTime end = LocalDateTime.now();
 
         System.out.println("time : " + Duration.between(start,end).toMillis());
-        System.out.println("recharge amount : " + rechargeAmount);
     }
 
 
