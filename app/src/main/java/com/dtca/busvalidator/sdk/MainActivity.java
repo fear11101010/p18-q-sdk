@@ -26,7 +26,7 @@ import javax.crypto.NoSuchPaddingException;
 
 public class MainActivity extends Activity {
 
-    private Button read, ride,alight;
+    private Button poll, read, ride, alight;
     FelicaCard felicaCard;
     Utils utils;
 
@@ -72,9 +72,33 @@ public class MainActivity extends Activity {
     }
 
     void initUI() {
+        poll = findViewById(R.id.poll);
         read = findViewById(R.id.read);
         ride = findViewById(R.id.ride);
         alight = findViewById(R.id.alight);
+        // set listener
+        poll.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Executors.newSingleThreadExecutor().execute(() -> {
+
+                    while (true) {
+                        try {
+                            System.out.println("Start Time :" + LocalDateTime.now());
+                            felicaCard.detectFelicaCard();
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            try {
+                                Thread.sleep(200);
+                            } catch (InterruptedException ex) {
+                                throw new RuntimeException(ex);
+                            }
+                        }
+                    }
+                });
+            }
+        });
         read.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -95,7 +119,7 @@ public class MainActivity extends Activity {
 //                                });
                             }
                         });
-                        System.out.println("Card balance: "+felicaCard.getBalance());
+                        System.out.println("Card balance: " + felicaCard.getBalance());
 
 
                     } catch (Exception e) {
@@ -144,7 +168,7 @@ public class MainActivity extends Activity {
 
 
                         });
-                        System.out.println("#RD>>> Card Write Time: "+(System.currentTimeMillis()-st1));
+                        System.out.println("#RD>>> Card Write Time: " + (System.currentTimeMillis() - st1));
 
                     } catch (Exception e) {
                         e.printStackTrace();

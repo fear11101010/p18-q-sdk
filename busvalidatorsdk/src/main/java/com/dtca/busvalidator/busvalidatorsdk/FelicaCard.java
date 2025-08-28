@@ -81,6 +81,7 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
 
     public void detectFelicaCard() throws Exception {
         long st1 = System.currentTimeMillis();
+        BasicOper.dc_card_status();
         String[] result = BasicOper.dc_FeliCaReset().split("\\|", -1);
         if (result.length >= 3 && result[0].equals("0000") && Utils.hexToByte(result[2]).length >= 18) {
             this.iDm = Arrays.copyOfRange(Utils.hexToByte(result[2]), 0, 8);
