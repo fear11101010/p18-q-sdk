@@ -112,10 +112,11 @@ public class RideAndAlight {
 
         Route.Station station = new Gson().fromJson(stationJson, Route.Station.class);
         if (type == Type.CANCEL_OF_ENTRY) {
+
             if (!ValidateCard.isBus(gateAccessLogInformation.getStatusFlag())) {
                 throw new NotSameBusException("Not bus exception");
             }
-            if (!ValidateCard.isStatusRide(gateAccessLogInformation.getStatusFlag())) {
+            if (!ValidateCard.isStatusRide(gateAccessLogInformation.getStatusFlag()) || !ValidateCard.isLastTransactionRide(felicaCardDetail.getStoredLogInformationList())) {
                 throw new StatusNotRideException("Not in Ride Mode");
             }
             if (!ValidateCard.isSameBus(gateAccessLogInformation.getCurrentEquipmentLocationNumber())) {
@@ -141,7 +142,8 @@ public class RideAndAlight {
 //                !ValidateCard.isSameDate(this.storedLogInformation) ||
                 !ValidateCard.isSameDate(this.gateAccessLogInformation) ||
                 ValidateCard.isStatusAlight(gateAccessLogInformation.getStatusFlag()) ||
-                ValidateCard.isGreaterThenTime(this.gateAccessLogInformation, MasterConfigName.ALIGHT_EXPIRY_TIME)) {
+                ValidateCard.isGreaterThenTime(this.gateAccessLogInformation, MasterConfigName.ALIGHT_EXPIRY_TIME) ||
+                !ValidateCard.isLastTransactionRide(felicaCardDetail.getStoredLogInformationList())) {
             type = Type.RIDE;
         } else if (ValidateCard.isStatusRide(gateAccessLogInformation.getStatusFlag())) {
             if (!ValidateCard.isBus(gateAccessLogInformation.getStatusFlag())) {

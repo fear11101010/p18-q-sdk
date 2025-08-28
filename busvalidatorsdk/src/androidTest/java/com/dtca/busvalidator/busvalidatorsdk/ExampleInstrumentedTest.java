@@ -4865,6 +4865,8 @@ public class ExampleInstrumentedTest {
         felicaCard.readCard(transactionData -> {
 
         });
+        boolean b = ValidateCard.isLastTransactionRide(felicaCard.getFelicaCardDetail().getStoredLogInformationList());
+
         LocalDateTime end = LocalDateTime.now();
 
         System.out.println("total read time : " + Duration.between(start,end).toMillis());

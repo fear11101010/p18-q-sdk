@@ -19,6 +19,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
@@ -258,5 +259,18 @@ public class ValidateCard {
         TripsEntity tripsEntity = Utils.getTripsByCardId(cardId);
         System.out.println("card direction check"+(tripsEntity != null && tripsEntity.direction.equalsIgnoreCase(direction.name())));
         return tripsEntity != null && tripsEntity.direction.equalsIgnoreCase(direction.name());
+    }
+
+    public static boolean isLastTransactionRide(List<StoredLogInformation> storedLogInformationList){
+
+        for (StoredLogInformation storedLogInformation:storedLogInformationList){
+            String serviceId = String.format("%02X%02X",storedLogInformation.getServiceClassificationCode(),
+                    storedLogInformation.getContextCode());
+            if(Arrays.asList("D220","D320").contains(serviceId.toUpperCase())){
+                int position = storedLogInformationList.indexOf(storedLogInformation);
+                return position < storedLogInformationList.size() - 1;
+            }
+        }
+        return false;
     }
 }
