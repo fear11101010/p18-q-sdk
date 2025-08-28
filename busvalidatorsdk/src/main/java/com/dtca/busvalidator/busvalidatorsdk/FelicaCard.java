@@ -180,7 +180,9 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         StoredLogInformation storedLogInformation = StoredLogInformation.generateData(Arrays.copyOfRange(bytes, 16 * 5, 16 * 6));
         List<StoredLogInformation> storedLogInformationList = getStoredLogInformationList(Arrays.copyOfRange(bytes, 16 * 5, 16 * 10));
         GateAccessLogInformation gateAccessLogInformation = GateAccessLogInformation.generateData(Arrays.copyOfRange(bytes, 16 * 10, 16 * 11));
+//        GateAccessLogInformation gateAccessLogInformation = GateAccessLogInformation.generateData(Arrays.copyOfRange(bytes, 16 * 6, 16 * 7));
         GateAccessLogInformationForTransfer gateAccessLogInformationForTransfer = GateAccessLogInformationForTransfer.generateData(Arrays.copyOfRange(bytes, 16 * 11, 16 * 12));
+//        GateAccessLogInformationForTransfer gateAccessLogInformationForTransfer = GateAccessLogInformationForTransfer.generateData(Arrays.copyOfRange(bytes, 16 * 7, 16 * 8));
 
         /*StoredLogInformation storedLogInformation = StoredLogInformation.generateData(Arrays.copyOfRange(openBlockData, 0, 16));
         GateAccessLogInformation gateAccessLogInformation = GateAccessLogInformation.generateData(Arrays.copyOfRange(openBlockData, 16, 16 * 2));
@@ -208,6 +210,8 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
 
         this.felicaCardDetail = new FelicaCardDetail(issuerInfo, attributeInfo, ePurseInfo,
                 operatorInfo, storedLogInformation, storedLogInformationList,gateAccessLogInformation, gateAccessLogInformationForTransfer);
+        /*this.felicaCardDetail = new FelicaCardDetail(issuerInfo, attributeInfo, ePurseInfo,
+                operatorInfo, storedLogInformation,gateAccessLogInformation, gateAccessLogInformationForTransfer);*/
 
     }
 
@@ -491,14 +495,14 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         blockNum = 12;
         blockList[0] = (byte) 0x80;    //file 1, issuer file
         blockList[1] = 0x00;    //0th block
-        /*blockList[2] = (byte) 0x81;    //file 2, personal info
+        blockList[2] = (byte) 0x81;    //file 2, personal info
         blockList[3] = 0x00;    //0th block
         blockList[4] = (byte) 0x81;    //file 2, personal info
         blockList[5] = 0x01;    //1th block
         blockList[6] = (byte) 0x81;    //file 2, personal info
         blockList[7] = 0x02;    //2nd block
         blockList[8] = (byte) 0x81;    //file 2, personal info
-        blockList[9] = 0x03;    //3rd block*/
+        blockList[9] = 0x03;    //3rd block
         blockList[2] = (byte) 0x81;    //file 3, card attrib file
         blockList[3] = 0x00;    //0th block
         blockList[4] = (byte) 0x81;    //file 3, card attrib file
@@ -521,7 +525,31 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         blockList[21] = 0x00;    //0th block
         blockList[22] = (byte) 0x86;    //file 7, Gate Access Log for transfer file
         blockList[23] = 0x00;    //0th block
-
+        /*blockNum = 8;
+        blockList[0] = (byte) 0x80;    //file 1, issuer file
+        blockList[1] = 0x00;    //0th block
+        *//*blockList[2] = (byte) 0x81;    //file 2, personal info
+        blockList[3] = 0x00;    //0th block
+        blockList[4] = (byte) 0x81;    //file 2, personal info
+        blockList[5] = 0x01;    //1th block
+        blockList[6] = (byte) 0x81;    //file 2, personal info
+        blockList[7] = 0x02;    //2nd block
+        blockList[8] = (byte) 0x81;    //file 2, personal info
+        blockList[9] = 0x03;    //3rd block*//*
+        blockList[2] = (byte) 0x81;    //file 3, card attrib file
+        blockList[3] = 0x00;    //0th block
+        blockList[4] = (byte) 0x81;    //file 3, card attrib file
+        blockList[5] = 0x01;    //1th block
+        blockList[6] = (byte) 0x82;    //file 4, ePurse
+        blockList[7] = 0x00;    //0th block
+        blockList[8] = (byte) 0x83;    //file 5, Operator info file
+        blockList[9] = 0x00;    //0th block
+        blockList[10] = (byte) 0x84;    //file 6, History file
+        blockList[11] = 0x00;    //0th block
+        blockList[12] = (byte) 0x85;    //file 7, Gate Access Log file
+        blockList[13] = 0x00;    //0th block
+        blockList[14] = (byte) 0x86;    //file 7, Gate Access Log for transfer file
+        blockList[15] = 0x00;    //0th block*/
         // log.d("readFiles_time", "readFiles: ----- "+(eTime-sTime));
 //        blockList[16] = (byte) 0x86;    //file 7, Gate Access Log for transfer file
 //        blockList[18] = 0x01;    //1th block
@@ -986,12 +1014,22 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
             String serviceId = String.format("%02X%02X",storedLogInformationList.get(i).getServiceClassificationCode(),
                     storedLogInformationList.get(i).getContextCode());
             if(Arrays.asList("D220","D320").contains(serviceId.toUpperCase()) && i+1 < storedLogInformationList.size()){
-                return Utils.convertTwosComplementByteArrayToLittleIndian(storedLogInformationList.get(i+1).getCardBalance(),3);
+                int balance = Utils.convertTwosComplementByteArrayToLittleIndian(storedLogInformationList.get(i).getCardBalance(),3);
+                int svBalance = Utils.charArrayToIntLE(felicaCardDetail.getEPurseInfo().getBinRemainingSV(), 4);
+                return Math.abs(balance - Utils.convertTwosComplementByteArrayToLittleIndian(storedLogInformationList.get(i+1).getCardBalance(),3))
+                        +(Utils.convertTwosComplementByteArrayToLittleIndian(storedLogInformationList.get(0).getCardBalance(),3) - svBalance);
+                /*if(balance < 0) {
+                    return Math.abs(balance - Utils.convertTwosComplementByteArrayToLittleIndian(storedLogInformationList.get(i+1).getCardBalance(),3))
+                            +Utils.convertTwosComplementByteArrayToLittleIndian(storedLogInformationList.get(0).getCardBalance(),3);
+                } else {
+                    return Math.abs(balance - Utils.convertTwosComplementByteArrayToLittleIndian(storedLogInformationList.get(i+1).getCardBalance(),3));
+                }*/
             }
         }
 
         return 0;
     }
+
 
     @Override
     public void removeCardIdList() {

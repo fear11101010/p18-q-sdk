@@ -24,6 +24,7 @@ import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -111,10 +112,11 @@ public class RideAndAlight {
 
         Route.Station station = new Gson().fromJson(stationJson, Route.Station.class);
         if (type == Type.CANCEL_OF_ENTRY) {
+
             if (!ValidateCard.isBus(gateAccessLogInformation.getStatusFlag())) {
                 throw new NotSameBusException("Not bus exception");
             }
-            if (!ValidateCard.isStatusRide(gateAccessLogInformation.getStatusFlag())) {
+            if (!ValidateCard.isStatusRide(gateAccessLogInformation.getStatusFlag()) || !ValidateCard.isLastTransactionRide(felicaCardDetail.getStoredLogInformationList())) {
                 throw new StatusNotRideException("Not in Ride Mode");
             }
             if (!ValidateCard.isSameBus(gateAccessLogInformation.getCurrentEquipmentLocationNumber())) {
@@ -140,7 +142,8 @@ public class RideAndAlight {
 //                !ValidateCard.isSameDate(this.storedLogInformation) ||
                 !ValidateCard.isSameDate(this.gateAccessLogInformation) ||
                 ValidateCard.isStatusAlight(gateAccessLogInformation.getStatusFlag()) ||
-                ValidateCard.isGreaterThenTime(this.gateAccessLogInformation, MasterConfigName.ALIGHT_EXPIRY_TIME)) {
+                ValidateCard.isGreaterThenTime(this.gateAccessLogInformation, MasterConfigName.ALIGHT_EXPIRY_TIME) ||
+                !ValidateCard.isLastTransactionRide(felicaCardDetail.getStoredLogInformationList())) {
             type = Type.RIDE;
         } else if (ValidateCard.isStatusRide(gateAccessLogInformation.getStatusFlag())) {
             if (!ValidateCard.isBus(gateAccessLogInformation.getStatusFlag())) {
@@ -677,11 +680,11 @@ public class RideAndAlight {
             this.initialNegativeBalance = Utils.charArrayToIntLE(attributeInfo.getNegativeValue(), 2);
             this.serviceId = Utils.getServiceId(storedLogInformation);
             if (Arrays.stream(new String[]{"d220", "d320"}).noneMatch(s -> s.equalsIgnoreCase(serviceId))) {
-                TripsEntity tripsEntity = Utils.getTripsByCardId(Utils.byteToHex(felicaCard.getIdi()));
-//                this.cashbackAmount = felicaCard.getCashbackAmount();
-                if(tripsEntity != null){
+//                TripsEntity tripsEntity = Utils.getTripsByCardId(Utils.byteToHex(felicaCard.getIdi()));
+                this.cashbackAmount = felicaCard.getCashbackAmount();
+                /*if(tripsEntity != null){
                     this.cashbackAmount = tripsEntity.cashBackAmount;
-                }
+                }*/
             } else {
                 this.cashbackAmount = Utils.charArrayToIntLE(ePurseInfo.getBinCashbackData(), 4);
             }
@@ -738,9 +741,13 @@ public class RideAndAlight {
             assert storedLogInformation != null;
             String serviceId = String.format("%02X%02X",storedLogInformation.getServiceClassificationCode(), storedLogInformation.getContextCode());
             if(!Arrays.asList(RIDE_AND_DEDUCTION_FROM_SV_NOT_NEGATIVE,RIDE_AND_DEDUCTION_FROM_SV_NEGATIVE).contains(serviceId.toUpperCase())){
-                TripsEntity tripsEntity = Utils.getTripsByCardId(Utils.byteToHex(felicaCard.getIdi()));
+                /*TripsEntity tripsEntity = Utils.getTripsByCardId(Utils.byteToHex(felicaCard.getIdi()));
                 if(tripsEntity!=null && tripsEntity.fromStation!=null){
                     storedLogInformation.setPlace1(Utils.hexToByte(tripsEntity.fromStation));
+                }*/
+                byte[] place1 = getPlace1();
+                if(place1 != null) {
+                    storedLogInformation.setPlace1(place1);
                 }
             }
             storedLogInformation.setEquipmentClassificationCode((byte) 0x42);
@@ -833,6 +840,19 @@ public class RideAndAlight {
             byteBuffer.put(gateAccessLogData);
             byteBuffer.put(gateAccessLogTransferData);
             return byteBuffer.array();
+        }
+
+        private byte[] getPlace1() {
+            List<StoredLogInformation> storedLogInformationList = felicaCardDetail.getStoredLogInformationList();
+            for(StoredLogInformation storedLogInformation : storedLogInformationList){
+                String serviceId = String.format("%02X%02X",storedLogInformation.getServiceClassificationCode(),
+                        storedLogInformation.getContextCode());
+                if(Arrays.asList("D220","D320").contains(serviceId.toUpperCase())){
+                    return storedLogInformation.getPlace1();
+                }
+            }
+
+            return null;
         }
     }
 }
