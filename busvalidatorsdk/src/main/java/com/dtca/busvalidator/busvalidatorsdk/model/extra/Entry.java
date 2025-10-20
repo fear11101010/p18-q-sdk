@@ -124,33 +124,33 @@ public class Entry {
         serviceCodes[14] = 0x01;// version key
         serviceCodes[15] = 0x00;// version key
 
-        int blockNumber = 6;
-        byte[] blockNumbers = new byte[12];
+        int blockNumber = 5;
+        byte[] blockNumbers = new byte[10];
 
         //	Card Attribute Information
-        blockNumbers[0] = (byte) 0x80;
+        blockNumbers[0] = (byte) 0x81;
         blockNumbers[1] = (byte) 0x00;
-        blockNumbers[2] = (byte) 0x80;
+        blockNumbers[2] = (byte) 0x81;
         blockNumbers[3] = (byte) 0x01;
 
         //	e-Purse Information
-        blockNumbers[4] = (byte) 0x81;
+        blockNumbers[4] = (byte) 0x82;
         blockNumbers[5] = (byte) 0x00;
 
         //	Gate Access Log Information File
-        blockNumbers[6] = (byte) 0x82;
+        blockNumbers[6] = (byte) 0x85;
         blockNumbers[7] = (byte) 0x00;
 
         //	Gate Access Log Information (For Transfer)
-        blockNumbers[8] = (byte) 0x83;
+        blockNumbers[8] = (byte) 0x86;
         blockNumbers[9] = (byte) 0x00;
-        blockNumbers[10] = (byte) 0x83;
-        blockNumbers[11] = (byte) 0x01;
+        /*blockNumbers[10] = (byte) 0x83;
+        blockNumbers[11] = (byte) 0x01;*/
 
         byte[] attr = attributeInfo.getData();
         byte[] ePurse = ePurseInfo.getData();
         byte[] accessLog = gateAccessLogInformation.getData();
-        byte[] accessLogForTransfer = gateAccessLogInformationForTransfer.getData();
+        byte[] accessLogForTransfer = gateAccessLogInformationForTransfer.getBlock0Data();
 
         ByteBuffer data = ByteBuffer.allocate(attr.length + ePurse.length + accessLog.length + accessLogForTransfer.length);
         data.put(attr);

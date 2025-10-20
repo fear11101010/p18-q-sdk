@@ -744,60 +744,7 @@ public class ExampleInstrumentedTest {
         }
     }
 
-    @Test
-    public void playVoice() throws Exception {
 
-        Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        // Print the result
-        /*String s = "Hello"; // UTF-8 encoded input
-
-        // Convert the UTF-8 encoded string to a byte array
-//        byte[] utf8Bytes = utf8String.getBytes(StandardCharsets.UTF_8);
-
-        // Convert the UTF-8 byte array back to a String (decoding UTF-8)
-//        String decodedString = new String(utf8Bytes, StandardCharsets.UTF_8);
-
-        // Convert the decoded string to UCS2 (UTF-16BE encoding)
-        byte[] ucs2Bytes = s.getBytes(StandardCharsets.UTF_16BE);
-
-        Sam sam = Sam.getInstance(3,appContext);
-        sam.initSam();
-        String[] result = BasicOper.dc_TtsVoiceConfig(0x01,0x80).split("\\|");
-        if(result[0].equals("0000")){
-            System.out.println("config successfully");
-        } else{
-            System.out.println("result------"+result[0]);
-        }
-
-        result = BasicOper.dc_TtsVoicePlay(0x01,ucs2Bytes).split("\\|");
-        if(result[0].equals("0000")){
-            System.out.println("speaker working properly");
-        } else{
-            System.out.println("result------"+result[0]);
-        }*/
-        tts = new TextToSpeech(appContext, status -> {
-            if (status == TextToSpeech.SUCCESS) {
-                // Set the language (you can change the locale as per your need)
-                int result = tts.setLanguage(Locale.US);
-
-                if (result == TextToSpeech.LANG_MISSING_DATA ||
-                        result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                    Log.e("TTS", "Language not supported or missing");
-                } else {
-                    isReady = true;
-                    Log.d("TTS", "TTS is ready");
-                    speakOut("Hello World");
-                }
-            } else {
-                Log.e("TTS", "Initialization failed");
-            }
-        });
-//        tts.speak("你好世界", TextToSpeech.QUEUE_FLUSH, null, null);
-    }
-
-    private void speakOut(String text) {
-        tts.speak("Set Language and Speak: Ensure that you set the language correctly for the custom TTS engine. Some engines may not support all languages or voices, so it’s essential to verify that the selected language is supported.", TextToSpeech.QUEUE_FLUSH, null, null);
-    }
 
     @Test
     public void readFare() throws Exception {
@@ -1908,7 +1855,7 @@ public class ExampleInstrumentedTest {
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
         Utils.openSerialReader();
 
-        Sam sam = Sam.getInstance(3, appContext);
+        Sam sam = Sam.getInstance(2, appContext);
         sam.initSam();
         FelicaCard felicaCard = FelicaCard.getInstance(sam);
         long sT = System.currentTimeMillis();
@@ -2456,7 +2403,7 @@ public class ExampleInstrumentedTest {
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
         Utils.openSerialReader();
 
-        Sam sam = Sam.getInstance(3, appContext);
+        Sam sam = Sam.getInstance(2, appContext);
         sam.initSam();
         FelicaCard felicaCard = FelicaCard.getInstance(sam);
         long sT = System.currentTimeMillis();
@@ -2468,9 +2415,11 @@ public class ExampleInstrumentedTest {
         });
         String s = Utils.convertByteArrayToBit(felicaCard.getFelicaCardDetail().getGateAccessLogInformation().getStatusFlag());
         System.out.println("s------>" + s);
+        System.out.println("tid------>" + Utils.byteToInteger(felicaCard.getFelicaCardDetail().getAttributeInfo().getTxnDataId()));
 
         Entry entry = new Entry(felicaCard);
         entry.executeEntry();
+        System.out.println("tid------>" + Utils.byteToInteger(felicaCard.getFelicaCardDetail().getAttributeInfo().getTxnDataId()));
         GateAccessLogInformation accessLogInformation = felicaCard.getFelicaCardDetail().getGateAccessLogInformation();
         String s1 = Utils.convertByteArrayToBit(accessLogInformation.getStatusFlag());
 

@@ -120,9 +120,9 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         System.out.println("#RD>>> Card Read Time: " + (System.currentTimeMillis() - st1));
         long st2 = System.currentTimeMillis();
         populateFelicaCard(Arrays.copyOfRange(readData, 3, readData.length), readLen[0] - 3);
-        if (ValidateCard.isMRTCard(felicaCardDetail.getIssuerInfo().getCardIssuerID())) {
+        /*if (ValidateCard.isMRTCard(felicaCardDetail.getIssuerInfo().getCardIssuerID())) {
             throw new MRTCardNotAllowedException("MRT Card is not allowed");
-        }
+        }*/
         if (ValidateCard.isFirstIssue(felicaCardDetail.getStoredLogInformation().getStoredValueLogId())) {
             throw new CardUnissuedException("Card is not second issued");
         }
