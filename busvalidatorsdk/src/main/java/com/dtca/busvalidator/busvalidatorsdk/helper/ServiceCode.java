@@ -36,7 +36,8 @@ public enum ServiceCode {
     BLACKLIST("blacklist","B001"),
     ENTRY_CANCEL("Cancel of Entry(TOM)","5412"),
     FIRST_ISSUE("1st issue","1001"),
-    SECOND_ISSUE("2nd issue","2002","2102"),
+    SECOND_ISSUE("2nd issue(per)","2002","2102"),
+    SECOND_ISSUE_ANONYMOUS("2nd issue(anon)","2202","2302"),
     SECOND_ISSUE_CANCEL("2nd issue cancel","9002"),
     REISSUE("reissue","C101","3101"),
     INFO_UPDATE("Information update","A101");
