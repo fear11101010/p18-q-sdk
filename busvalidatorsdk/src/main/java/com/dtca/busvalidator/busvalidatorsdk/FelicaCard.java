@@ -43,26 +43,94 @@ import java.util.Optional;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Represents a FeliCa card interface for reading and writing operations on bus validator systems.
+ * This class implements the ReadWriteInCard and ClearCardId interfaces to manage FeliCa smart card
+ * transactions including authentication, balance management, and transaction history.
+ *
+ * <p>The FelicaCard class provides comprehensive functionality for:
+ * <ul>
+ *   <li>Card detection and initialization</li>
+ *   <li>Mutual authentication with FeliCa cards</li>
+ *   <li>Reading card data including issuer info, e-purse info, and transaction logs</li>
+ *   <li>Writing data to card blocks</li>
+ *   <li>Transaction history retrieval</li>
+ *   <li>Balance and cashback calculations</li>
+ * </ul>
+ *
+ * <p>This class follows the Singleton pattern to ensure only one instance manages card operations.
+ *
+ * @author Bus Validator SDK Team
+ * @version 1.0
+ * @see ReadWriteInCard
+ * @see ClearCardId
+ * @see FelicaCardDetail
+ */
 public class FelicaCard implements ReadWriteInCard, ClearCardId {
+
+    /**
+     * Singleton instance of FelicaCard.
+     */
     private static FelicaCard felicaCard;
+    /**
+     * SAM (Secure Access Module) instance for secure operations.
+     */
     @Getter
     private final Sam sam;
+
+    /**
+     * IDm (Manufacturer ID) - 8 bytes unique identifier of the FeliCa card.
+     */
     @Getter
     private byte[] iDm;
+
+    /**
+     * PMm (Manufacturer Parameter) - 8 bytes containing card manufacturing information.
+     */
     @Getter
     private byte[] pMm;
+
+    /**
+     * IDt (Card Identifier during session) - temporary identifier for the current session.
+     */
     private byte[] idt;
+
+    /**
+     * IDi (Card Individual Number) - unique card identification number.
+     */
     @Getter
     private byte[] idi;
+
+    /**
+     * Initial IDi value used for card initialization verification. (value always 0)
+     */
     private byte[] initIdi;
+
+    /**
+     * System code identifying the card system (2 bytes little indian).
+     */
     @Getter
     private byte[] systemCode;
+
+    /**
+     * Detailed information structure containing all card data blocks.
+     */
     @Getter
     @Setter
     private FelicaCardDetail felicaCardDetail;
+
+    /**
+     * Current balance stored on the card in the smallest currency unit.
+     */
     @Getter
     private int currentBalance;
 
+    /**
+     * Private constructor to enforce Singleton pattern.
+     * Initializes the card configuration using BasicOper.
+     *
+     * @param sam the SAM instance for secure operations
+     */
     private FelicaCard(Sam sam) {
         this.sam = sam;
         String[] result = BasicOper.dc_config_card(3).split("\\|", -1);
@@ -71,6 +139,13 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         }
     }
 
+    /**
+     * Returns the singleton instance of FelicaCard.
+     * Creates a new instance if one doesn't exist.
+     *
+     * @param sam the SAM instance required for card operations
+     * @return the singleton FelicaCard instance
+     */
     public static FelicaCard getInstance(Sam sam) {
         if (felicaCard == null) {
             felicaCard = new FelicaCard(sam);
@@ -79,6 +154,13 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
 
     }
 
+    /**
+     * Detects and initializes a FeliCa card by performing a reset operation.
+     * Extracts IDm, PMm, and system code from the card response.
+     *
+     * @throws CardNotFoundException if no card is detected or card response is invalid
+     * @throws Exception if card detection fails
+     */
     public void detectFelicaCard() throws Exception {
         long st1 = System.currentTimeMillis();
         String[] result = BasicOper.dc_FeliCaReset().split("\\|", -1);
@@ -102,11 +184,28 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
                     throw new CardNotFoundException("No Card Detected. Please tap card");
                 }
             }
-            throw new CardNotFoundException("No Card Detected. Please tap card");
+            else {
+                throw new CardNotFoundException("No Card Detected. Please tap card");
+            }
         }
 
     }
 
+    /**
+     * Reads complete card data including issuer info, e-purse info, operator info,
+     * stored value logs, and gate access logs. Validates card status and checks
+     * against blacklist.
+     *
+     * @param dataInterface callback interface for transaction data handling
+     * @return 1 if read operation is successful
+     * @throws CardReadException if card cannot be read
+     * @throws CardUnissuedException if card is not second issued
+     * @throws CardIdSameException if card is not properly initialized
+     * @throws CardNotActiveException if card is not active
+     * @throws CardBlackListException if card is blacklisted
+     * @throws VoidCardException if card is void
+     * @throws Exception for other card reading errors
+     */
     public int readCard(DataInterface dataInterface) throws Exception {
         long st1 = System.currentTimeMillis();
         byte[] readData = new byte[256];
@@ -155,6 +254,15 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         return 1;
     }
 
+    /**
+     * Reads card data specifically for transaction history retrieval with mutual auth.
+     * This is a lighter operation compared to full card read.
+     *
+     * @param dataInterface callback interface for transaction data handling
+     * @return 1 if read operation is successful
+     * @throws CardReadException if card cannot be read
+     * @throws Exception for other card reading errors
+     */
     public int readCardForTransactionHistory(DataInterface dataInterface) throws Exception {
         byte[] readData = new byte[256];
         int[] readLen = new int[1];
@@ -169,6 +277,14 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
     }
 
     //    private void populateFelicaCard(byte[] data, int len, byte[] openBlockData) {
+    /**
+     * Populates the FelicaCardDetail object with data read from the card.
+     * Parses various information blocks including issuer info, attribute info,
+     * e-purse info, operator info, and transaction logs.
+     *
+     * @param data byte array containing card data
+     * @param len length of valid data in the array
+     */
     private void populateFelicaCard(byte[] data, int len) {
         byte[] bytes = Arrays.copyOfRange(data, 0, len - 2);
         IssuerInfo issuerInfo = IssuerInfo.generateData(Arrays.copyOfRange(bytes, 0, 16));
@@ -214,6 +330,14 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
 
     }
 
+    /**
+     * Extracts stored log information list from card data.
+     * Stored log information contain 20 blocks
+     * Each log entry is 16 bytes.
+     *
+     * @param bytes byte array containing stored log data
+     * @return list of StoredLogInformation objects
+     */
     public List<StoredLogInformation> getStoredLogInformationList(byte[] bytes) {
         List<StoredLogInformation> storedLogInformationList = new ArrayList<>();
         for(int i = 0;i < bytes.length;i += 16){
@@ -222,6 +346,20 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         return storedLogInformationList;
     }
 
+    /**
+     * Populates card details specifically for transaction history viewing.
+     * Performs validation checks but doesn't load complete card information.
+     *
+     * @param data byte array containing card data
+     * @param len length of valid data
+     * @param dataInterface callback interface for transaction data
+     * @throws CardUnissuedException if card is not second issued
+     * @throws CardIdSameException if card is not initialized
+     * @throws CardNotActiveException if card is not active
+     * @throws CardBlackListException if card is blacklisted
+     * @throws VoidCardException if card is void
+     * @throws Exception for other validation errors
+     */
     private void populateFelicaCardForTransactionHistory(byte[] data, int len, DataInterface dataInterface) throws Exception {
         byte[] bytes = Arrays.copyOfRange(data, 0, len - 2);
         AttributeInfo attributeInfo = AttributeInfo.generateData(Arrays.copyOfRange(bytes, 0, 16 * 2));
@@ -248,6 +386,15 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         }
     }
 
+    /**
+     * Performs mutual authentication version 2 with the FeliCa card.
+     * This establishes a secure session for reading/writing operations.
+     *
+     * @param serviceCodeNum number of service codes to authenticate
+     * @param serviceCodeKeyVerList array containing service codes and key versions
+     * @return 1 if authentication successful, 0 otherwise
+     * @throws Exception if authentication process fails
+     */
     public int mutualAuthV2WithFeliCa(byte serviceCodeNum,
                                       byte[] serviceCodeKeyVerList) throws Exception {
 
@@ -316,6 +463,15 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
 
     }
 
+    /**
+     * Transmits a command to the FeliCa card and receives the response.
+     *
+     * @param felicaCmdLen length of the command to send
+     * @param felicaCmdBuf buffer containing the command
+     * @param felicaResLen array to store response length
+     * @param felicaResBuf buffer to store response data
+     * @return 1 if transmission successful, 0 otherwise
+     */
     public int transmitDataToFeliCaCard(int felicaCmdLen, byte[] felicaCmdBuf, int[] felicaResLen, byte[] felicaResBuf) {
         byte[] sendBuf = new byte[262];
         int sendLen, receiveLen;
@@ -347,6 +503,13 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         return 1;
     }
 
+    /**
+     * Reads card data and returns the FelicaCard instance.
+     * Implements ReadWriteInCard interface method.
+     *
+     * @return FelicaCard instance with populated data, or null if read fails
+     * @throws Exception if card reading fails
+     */
     @Override
     public FelicaCard readData() throws Exception {
         if (readCard(transactionData -> Log.d("transaction_data", new Gson().toJson(transactionData))) == 0) {
@@ -355,6 +518,17 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         return this;
     }
 
+    /**
+     * Writes data to specified blocks on the FeliCa card.
+     *
+     * @param serviceNum number of services involved
+     * @param serviceList array of service codes
+     * @param blockNum number of blocks to write
+     * @param blockList array specifying which blocks to write
+     * @param blockData actual data to write
+     * @return 1 if write successful, 0 otherwise
+     * @throws Exception if write operation fails
+     */
     @Override
     public int writeInCard(int serviceNum, byte[] serviceList, int blockNum, byte[] blockList, byte[] blockData) throws Exception {
 //        int ret = mutualAuthV2WithFeliCa((byte) serviceNum, serviceList);
@@ -373,7 +547,16 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         return 1;
     }
 
-
+    /**
+     * Reads specified data blocks from the card.
+     *
+     * @param blockNum number of blocks to read
+     * @param blockList array specifying which blocks to read
+     * @param readLen array to store length of read data
+     * @param readData buffer to store read data
+     * @return 1 if read successful, 0 otherwise
+     * @throws Exception if read operation fails
+     */
     public int readDataBlock(byte blockNum, byte[] blockList, int[] readLen, byte[] readData) throws Exception {
         byte[] felicaCmdParams = new byte[256], felicaCmd = new byte[262], felicaRes = new byte[262];
         int felicaCmdParamsLen;
@@ -401,6 +584,14 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
 
     }
 
+    /**
+     * Performs mutual authentication with the FeliCa card for standard operations.
+     * Authenticates access to issuer info, card attributes, e-purse info,
+     * operator info, stored value logs, and gate access logs.
+     *
+     * @return 1 if authentication successful, 0 otherwise
+     * @throws Exception if authentication fails
+     */
     public int mutualAuthWithFelicaCard() throws Exception {
         long st = System.currentTimeMillis();
         byte serviceNum;
@@ -443,6 +634,16 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         return 1;
     }
 
+    /**
+     * Reads all necessary files from the card after successful authentication.
+     * Reads issuer info, card attributes, e-purse info, operator info,
+     * stored value logs, gate access logs, and transfer logs.
+     *
+     * @param readData buffer to store read data
+     * @param readLen array to store length of read data
+     * @return 1 if read successful, 0 otherwise
+     * @throws Exception if read operation fails
+     */
     public int readFiles(byte[] readData, int[] readLen) throws Exception {
         long st = System.currentTimeMillis();
         byte serviceNum, blockNum;
@@ -564,6 +765,15 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         return 1;
     }
 
+    /**
+     * Reads card files specifically for transaction history retrieval.
+     * Lighter operation that only reads necessary blocks for history.
+     *
+     * @param readData buffer to store read data
+     * @param readLen array to store length of read data
+     * @return 1 if read successful, 0 otherwise
+     * @throws Exception if read operation fails
+     */
     public int readFilesForTransactionHistory(byte[] readData, int[] readLen) throws Exception {
         long sTime = System.currentTimeMillis();
         byte serviceNum, blockNum;
@@ -606,6 +816,13 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         return 1;
     }
 
+    /**
+     * Reads card data without authentication.
+     * Used for accessing open blocks that don't require secure access.
+     *
+     * @return byte array containing read data
+     * @throws CardReadException if card cannot be read
+     */
     public byte[] readWithoutAuth() throws CardReadException {
         long sTime = System.currentTimeMillis();
         byte[] idm = getIDm();
@@ -703,6 +920,17 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         writeInCard(serviceNumber, serviceCodeList, blockNumber, blockNumberList, byteBuffer.array());
     }
 
+    /**
+     * Writes data to specified blocks on the card.
+     * Internal method that handles the actual write operation through SAM.
+     *
+     * @param blockNum number of blocks to write
+     * @param blockLen total length of block list data
+     * @param blockList array specifying which blocks to write
+     * @param blockData actual data to write
+     * @return 1 if write successful, 0 otherwise
+     * @throws Exception if write operation fails
+     */
     private int writeBlockData(int blockNum, int blockLen, byte[] blockList, byte[] blockData) throws Exception {
         long _ret;
 
@@ -744,11 +972,24 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         return 1;
     }
 
+    /**
+     * Gets the current balance from the stored value log.
+     *
+     * @return current balance in smallest currency unit
+     * @throws CardReadException if card data is not available
+     */
     public int getBalance() throws CardReadException {
         if (felicaCardDetail == null) throw new CardReadException("Please read card first");
         return Utils.convertTwosComplementByteArrayToLittleIndian(felicaCardDetail.getStoredLogInformation().getCardBalance(), 3);
     }
 
+    /**
+     * Gets the deducted balance amount when card is in ride mode.
+     *
+     * @return amount deducted during ride
+     * @throws CardReadException if card data is not available
+     * @throws WrongServiceIdException if card is not in ride mode
+     */
     public int getDeductBalanceOnRide() throws CardReadException, WrongServiceIdException {
         if (felicaCardDetail == null) throw new CardReadException("Please read card first");
         String serviceId = Utils.byteToHex(new byte[]{felicaCardDetail.getStoredLogInformation().getServiceClassificationCode(),
@@ -763,6 +1004,13 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         throw new WrongServiceIdException("Customer not in ride mode");
     }
 
+    /**
+     * Gets the refund balance amount when card is in alight mode.
+     *
+     * @return amount to be refunded during alight
+     * @throws CardReadException if card data is not available
+     * @throws WrongServiceIdException if card is not in alight mode
+     */
     public int getRefundBalanceOnAlight() throws CardReadException, WrongServiceIdException {
         if (felicaCardDetail == null) throw new CardReadException("Please read card first");
         String serviceId = Utils.byteToHex(new byte[]{felicaCardDetail.getStoredLogInformation().getServiceClassificationCode(),
@@ -776,6 +1024,13 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         throw new WrongServiceIdException("Customer not in alight mode");
     }
 
+    /**
+     * Checks if the card status indicates ride mode (entry without exit).
+     *
+     * @return true if card is in ride status, false otherwise
+     * @throws CardReadException if card data is not available
+     * @throws WrongServiceIdException if service ID validation fails
+     */
     public boolean isStatusRide() throws CardReadException, WrongServiceIdException {
         if (felicaCardDetail == null) throw new CardReadException("Please read card first");
         int mask = 1 << 15;
@@ -783,6 +1038,12 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         return statusFlag != 0;
     }
 
+    /**
+     * Checks if the card status indicates alight mode (exit after entry).
+     *
+     * @return true if card is in alight status, false otherwise
+     * @throws CardReadException if card data is not available
+     */
     public boolean isStatusAlight() throws CardReadException {
         if (felicaCardDetail == null) throw new CardReadException("Please read card first");
         /*String serviceId = Utils.byteToHex(new byte[]{felicaCardDetail.getStoredLogInformation().getServiceClassificationCode(),
@@ -794,6 +1055,13 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
 
     // get transaction history
 
+    /**
+     * Retrieves complete transaction history from the card with authentication.
+     * Reads all 20 stored value log entries and constructs transaction history objects.
+     *
+     * @return list of TransactionHistory objects containing all transactions
+     * @throws RuntimeException if transaction history retrieval fails
+     */
     public List<TransactionHistory> getTransactionHistory() {
         List<TransactionHistory> transactionHistories = new ArrayList<>();
         byte[] serviceCodes = new byte[]{0x0C, 0x22, 0x01, 0x00};
@@ -852,6 +1120,12 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         return transactionHistories;
     }
 
+    /**
+     * Converts date byte array from card format to readable date string.
+     *
+     * @param bytes date in card binary format
+     * @return formatted date string in DD/MM/YY format, or empty string if invalid
+     */
     private String getDate(byte[] bytes) {
         String date = Utils.convertByteArrayToBit(bytes);
         if (date.chars().allMatch(c -> c == '0')) {
@@ -864,6 +1138,13 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         return String.format(Locale.ENGLISH, "%02d/%02d/%02d", day, month, year);
     }
 
+    /**
+     * Gets the operation name from service ID code.
+     * Maps service classification and context codes to operation names.
+     *
+     * @param serviceId combined service classification and context code
+     * @return operation name (e.g., "Ride", "Alight", "Recharge"), or null if not found
+     */
     private String getOperationName(String serviceId) {
         for (ServiceCode code : ServiceCode.values()) {
             Optional<String> serviceCode = Arrays.stream(code.getCodes()).filter(c -> c.equalsIgnoreCase(serviceId)).findFirst();
@@ -874,6 +1155,14 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         return null;
     }
 
+    /**
+     * Retrieves transaction history without authentication.
+     * Uses open access blocks to read stored value logs and gate access logs.
+     * Calculates transaction amounts based on balance differences.
+     *
+     * @return list of TransactionHistory objects
+     * @throws Exception if transaction history retrieval fails
+     */
     public List<TransactionHistory> getTransactionHistoryWithoutAuth() throws Exception {
         List<TransactionHistory> transactionHistories = new ArrayList<>();
 
@@ -1006,7 +1295,13 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         return transactionHistories;
     }
 
-
+    /**
+     * Calculates the cashback amount based on stored value log entries.
+     * Identifies recharge transactions (service IDs D220, D320) and calculates
+     * the cashback by comparing balances before and after recharge.
+     *
+     * @return cashback amount in smallest currency unit, or 0 if no cashback
+     */
     public int getCashbackAmount() {
         List<StoredLogInformation> storedLogInformationList = felicaCardDetail.getStoredLogInformationList();
         for(int i = 0;i < storedLogInformationList.size();i++){
@@ -1029,7 +1324,10 @@ public class FelicaCard implements ReadWriteInCard, ClearCardId {
         return 0;
     }
 
-
+    /**
+     * Removes all card IDs from the internal card list.
+     * Implements ClearCardId interface method.
+     */
     @Override
     public void removeCardIdList() {
         Utils.getInstance().getCardList().clear();

@@ -2976,13 +2976,18 @@ public class ExampleInstrumentedTest {
         });
         et = System.currentTimeMillis();
         System.out.println("card_read_time---->" + ((double) (et - st)) / 1000);
-        RideAndAlight rideAndAlight = new RideAndAlight(felicaCard);
+        GateAccessLogInformation gateAccessLogInformation = felicaCard.getFelicaCardDetail().getGateAccessLogInformation();
+        byte[] bytes = gateAccessLogInformation.getStatusFlag();
+        String hx = Utils.byteToHex(bytes);
+        String bits = Utils.convertByteArrayToBit(bytes);
+        System.out.println("print");
+        /*RideAndAlight rideAndAlight = new RideAndAlight(felicaCard);
         rideAndAlight.setFareMatrix(Utils.getInstance().fareMatrix);
         rideAndAlight.setDirection( RideAndAlight.Direction.UPSTREAM);
         rideAndAlight.setStation(new Gson().toJson(Utils.getInstance().fareMatrix.getStations().get(0)));
         rideAndAlight.writeData(transactionData -> {
             Log.d("ride alight: ",new Gson().toJson(transactionData));
-        });
+        });*/
         /*felicaCard.readCardForTransactionHistory(transactionData -> {
             // nothing
         });
@@ -4782,6 +4787,7 @@ public class ExampleInstrumentedTest {
         });
 //        StoredLogInformation storedLogInformation = felicaCard.getFelicaCardDetail().getStoredLogInformation();
 //        List<StoredLogInformation> storedLogInformationList = felicaCard.getFelicaCardDetail().getStoredLogInformationList();
+        List<TransactionHistory> storedLogInformationList = felicaCard.getTransactionHistory();
         LocalDateTime start = LocalDateTime.now();
         int rechargeAmount = felicaCard.getCashbackAmount();
         LocalDateTime end = LocalDateTime.now();

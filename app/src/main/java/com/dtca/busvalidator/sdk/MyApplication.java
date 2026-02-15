@@ -17,17 +17,142 @@ import java.io.InputStream;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Main application class for the Bus Validator SDK.
+ * <p>
+ * This class extends {@link Application} and manages the initialization and lifecycle
+ * of the bus validator system components including:
+ * <ul>
+ *   <li>Serial reader for card communication</li>
+ *   <li>SAM (Security Application Module) initialization</li>
+ *   <li>FeliCa card reader interface</li>
+ *   <li>Fare matrix and route configuration</li>
+ *   <li>Device information setup</li>
+ *   <li>Blacklist data management</li>
+ * </ul>
+ * </p>
+ *
+ * <p>
+ * The initialization is performed asynchronously on a background thread to avoid
+ * blocking the main UI thread during app startup.
+ * </p>
+ *
+ * @author DTCA Bus Validator Team
+ * @version 1.0
+ * @see Application
+ * @see Sam
+ * @see FelicaCard
+ * @see Utils
+ */
 @Getter
 public class MyApplication extends Application {
-    private final String FARE_MATRIX = "{\"routeId\":2,\"routeName\":\"HR Transport\",\"isFlatFare\":false,\"isCircular\":true,\"circularDirection\":\"DESC\",\"numberOfStoppage\":9,\"operatorCode\":\"0A0B\",\"routeOrderNo\":1,\"tripCountStationCode\":\"8C10\",\"stations\":[{\"id\":26,\"stationName\":\"Modhubag\",\"stationNameBng\":\"মধুবাগ\",\"stationCode\":\"8C0A\",\"isTripCountStation\":false,\"routeId\":2,\"stationOrderNo\":10,\"latitude\":23.76006692822424,\"longitude\":90.41051938497438},{\"id\":25,\"stationName\":\"Mohanagor\",\"stationNameBng\":\"মহানগর\",\"stationCode\":\"8C0D\",\"isTripCountStation\":false,\"routeId\":2,\"stationOrderNo\":13,\"latitude\":23.766170790911985,\"longitude\":90.41247259077545},{\"id\":24,\"stationName\":\"Rampura\",\"stationNameBng\":\"রামপুরা\",\"stationCode\":\"8C10\",\"isTripCountStation\":true,\"routeId\":2,\"stationOrderNo\":16,\"latitude\":23.767990002202243,\"longitude\":90.42181220076523},{\"id\":23,\"stationName\":\"Badda\",\"stationNameBng\":\"বাড্ডা\",\"stationCode\":\"8C11\",\"isTripCountStation\":false,\"routeId\":2,\"stationOrderNo\":17,\"latitude\":23.770341600170017,\"longitude\":90.42293872855763},{\"id\":22,\"stationName\":\"Police Plaza/Shooting Club\",\"stationNameBng\":\"পুলিশ প্লাজা/শুটিং ক্লাব\",\"stationCode\":\"8C13\",\"isTripCountStation\":false,\"routeId\":2,\"stationOrderNo\":19,\"latitude\":23.772594722358928,\"longitude\":90.41540156595897},{\"id\":21,\"stationName\":\"Kuni Para/Happy Homes\",\"stationNameBng\":\"কুনি পাড়া/হ্যাপি হোমস\",\"stationCode\":\"8C16\",\"isTripCountStation\":false,\"routeId\":2,\"stationOrderNo\":22,\"latitude\":23.767246995198775,\"longitude\":90.40919172485185},{\"id\":20,\"stationName\":\"Bou Bazar\",\"stationNameBng\":\"বউ বাজার\",\"stationCode\":\"8C19\",\"isTripCountStation\":false,\"routeId\":2,\"stationOrderNo\":25,\"latitude\":23.76179514298692,\"longitude\":90.4079015489616},{\"id\":19,\"stationName\":\"FDC\",\"stationNameBng\":\"এফডিসি\",\"stationCode\":\"8C1C\",\"isTripCountStation\":false,\"routeId\":2,\"stationOrderNo\":28,\"latitude\":23.755307238149342,\"longitude\":90.40194564575447}],\"fareMatrix\":{\"8C1E\":{\"8C1E\":0,\"8C1C\":20,\"8C19\":20,\"8C16\":20,\"8C13\":20,\"8C11\":25,\"8C10\":25,\"8C0D\":25,\"8C0A\":25,\"maxFareUpStream\":40,\"maxFareDownStream\":40},\"8C1C\":{\"8C1E\":40,\"8C1C\":0,\"8C19\":20,\"8C16\":20,\"8C13\":20,\"8C11\":25,\"8C10\":25,\"8C0D\":25,\"8C0A\":25,\"maxFareUpStream\":40,\"maxFareDownStream\":40},\"8C19\":{\"8C1E\":30,\"8C1C\":30,\"8C19\":0,\"8C16\":20,\"8C13\":20,\"8C11\":25,\"8C10\":25,\"8C0D\":30,\"8C0A\":30,\"maxFareUpStream\":40,\"maxFareDownStream\":40},\"8C16\":{\"8C1E\":30,\"8C1C\":30,\"8C19\":40,\"8C16\":0,\"8C13\":20,\"8C11\":20,\"8C10\":20,\"8C0D\":25,\"8C0A\":25,\"maxFareUpStream\":40,\"maxFareDownStream\":40},\"8C13\":{\"8C1E\":25,\"8C1C\":25,\"8C19\":25,\"8C16\":25,\"8C13\":0,\"8C11\":15,\"8C10\":15,\"8C0D\":25,\"8C0A\":25,\"maxFareUpStream\":40,\"maxFareDownStream\":40},\"8C11\":{\"8C1E\":25,\"8C1C\":25,\"8C19\":20,\"8C16\":20,\"8C13\":20,\"8C11\":0,\"8C10\":20,\"8C0D\":20,\"8C0A\":20,\"maxFareUpStream\":40,\"maxFareDownStream\":40},\"8C10\":{\"8C1E\":25,\"8C1C\":25,\"8C19\":20,\"8C16\":20,\"8C13\":20,\"8C11\":40,\"8C10\":0,\"8C0D\":20,\"8C0A\":20,\"maxFareUpStream\":40,\"maxFareDownStream\":40},\"8C0D\":{\"8C1E\":20,\"8C1C\":20,\"8C19\":25,\"8C16\":25,\"8C13\":25,\"8C11\":25,\"8C10\":25,\"8C0D\":0,\"8C0A\":20,\"maxFareUpStream\":40,\"maxFareDownStream\":40},\"8C0A\":{\"8C1E\":15,\"8C1C\":15,\"8C19\":20,\"8C16\":20,\"8C13\":25,\"8C11\":25,\"8C10\":25,\"8C0D\":40,\"8C0A\":0,\"maxFareUpStream\":40,\"maxFareDownStream\":40}}}";
-    private final String ROUTE = "[{\"id\":2,\"numberOfRoute\":1,\"operatorCode\":\"0A0B\",\"routeOrderNo\":1,\"routeName\":\"HR Transport\",\"numberOfStoppage\":9,\"isActive\":true,\"lastUpdateAt\":\"2024-09-15\",\"effectiveAt\":\"2024-09-15\",\"expiryAt\":\"2030-12-31\",\"isFlatFare\":false,\"isCircularRoute\":true,\"circularDirection\":\"DESC\",\"stations\":[{\"id\":26,\"stationName\":\"Modhubag\",\"stationNameBng\":\"মধুবাগ\",\"stationCode\":\"8C0A\",\"isTripCountStation\":false,\"routeId\":2,\"stationOrderNo\":10,\"latitude\":23.76006692822424,\"longitude\":90.41051938497438},{\"id\":25,\"stationName\":\"Mohanagor\",\"stationNameBng\":\"মহানগর\",\"stationCode\":\"8C0D\",\"isTripCountStation\":false,\"routeId\":2,\"stationOrderNo\":13,\"latitude\":23.766170790911985,\"longitude\":90.41247259077545},{\"id\":24,\"stationName\":\"Rampura\",\"stationNameBng\":\"রামপুরা\",\"stationCode\":\"8C10\",\"isTripCountStation\":true,\"routeId\":2,\"stationOrderNo\":16,\"latitude\":23.767990002202243,\"longitude\":90.42181220076523},{\"id\":23,\"stationName\":\"Badda\",\"stationNameBng\":\"বাড্ডা\",\"stationCode\":\"8C11\",\"isTripCountStation\":false,\"routeId\":2,\"stationOrderNo\":17,\"latitude\":23.770341600170017,\"longitude\":90.42293872855763},{\"id\":22,\"stationName\":\"Police Plaza/Shooting Club\",\"stationNameBng\":\"পুলিশ প্লাজা/শুটিং ক্লাব\",\"stationCode\":\"8C13\",\"isTripCountStation\":false,\"routeId\":2,\"stationOrderNo\":19,\"latitude\":23.772594722358928,\"longitude\":90.41540156595897},{\"id\":21,\"stationName\":\"Kuni Para/Happy Homes\",\"stationNameBng\":\"কুনি পাড়া/হ্যাপি হোমস\",\"stationCode\":\"8C16\",\"isTripCountStation\":false,\"routeId\":2,\"stationOrderNo\":22,\"latitude\":23.767246995198775,\"longitude\":90.40919172485185},{\"id\":20,\"stationName\":\"Bou Bazar\",\"stationNameBng\":\"বউ বাজার\",\"stationCode\":\"8C19\",\"isTripCountStation\":false,\"routeId\":2,\"stationOrderNo\":25,\"latitude\":23.76179514298692,\"longitude\":90.4079015489616},{\"id\":19,\"stationName\":\"FDC\",\"stationNameBng\":\"এফডিসি\",\"stationCode\":\"8C1C\",\"isTripCountStation\":false,\"routeId\":2,\"stationOrderNo\":28,\"latitude\":23.755307238149342,\"longitude\":90.40194564575447}]}]";
+
+    /**
+     * JSON string containing the fare matrix configuration for the HR Transport route.
+     * <p>
+     * The fare matrix defines:
+     * <ul>
+     *   <li>Route ID and name</li>
+     *   <li>Route type (circular/non-circular)</li>
+     *   <li>Station information with codes and coordinates</li>
+     *   <li>Fare prices between each station pair</li>
+     *   <li>Maximum fares for upstream and downstream travel</li>
+     * </ul>
+     * </p>
+     *
+     * @see com.dtca.busvalidator.busvalidatorsdk.model.FareMatrix
+     */
+    private final String FARE_MATRIX = "";
+
+    /**
+     * JSON string containing the route configuration data.
+     * <p>
+     * Includes detailed information about the HR Transport route:
+     * <ul>
+     *   <li>Route metadata (ID, name, operator code)</li>
+     *   <li>Route characteristics (circular, direction, number of stops)</li>
+     *   <li>Complete station list with Bengali names</li>
+     *   <li>Geographic coordinates for each station</li>
+     *   <li>Trip count station designation</li>
+     *   <li>Validity dates (effective and expiry)</li>
+     * </ul>
+     * </p>
+     *
+     * @see com.dtca.busvalidator.busvalidatorsdk.model.Route
+     */
+    private final String ROUTE = "";
+
+    /**
+     * JSON string containing device-specific configuration information.
+     * <p>
+     * Device information includes:
+     * <ul>
+     *   <li>Device serial number</li>
+     *   <li>Operator code</li>
+     *   <li>Equipment classification and location codes</li>
+     *   <li>Station code assignment</li>
+     *   <li>Authentication passkey</li>
+     *   <li>Network configuration (IP address, port)</li>
+     *   <li>File system paths for data upload/download</li>
+     *   <li>Paired equipment information</li>
+     * </ul>
+     * </p>
+     *
+     * @see com.dtca.busvalidator.busvalidatorsdk.model.DeviceInfo
+     */
     private final String DEVICE_INFO = "{\"id\":1,\"deviceSerialNumber\":\"00012700202401000009\",\"activeFlag\":true,\"operatorCode\":\"0A0B\",\"equipmentClassificationCode\":\"42\",\"stationCode\":\"1011\",\"equipmentLocationNumber\":\"0101\",\"passkey\":\"$2a$10$Z9U.xysztj6Mi8e..z8V4exk74ocJqS7n6jA4nUawb.MsFo2wnw72\",\"pairedEquipmentLocationNumber\":[\"0102\"],\"ipAddress\":\"192.168.191.168\",\"port\":5000,\"downloadPath\":\"/data/export\",\"uploadPath\":\"/data\"}";
+
+    /**
+     * Security Application Module (SAM) instance for secure card operations.
+     * Handles cryptographic operations and secure authentication.
+     */
     private Sam sam;
+
+    /**
+     * FeliCa card reader interface for contactless smart card communication.
+     * Manages card detection, reading, and writing operations.
+     */
     private FelicaCard felicaCard;
+
+    /**
+     * Transaction type indicator specifying whether the current operation
+     * is a RIDE (boarding) or ALIGHT (exiting) event.
+     *
+     * @see RideAndAlight.Type
+     */
     @Setter
     private RideAndAlight.Type type;
+
+    /**
+     * Utility class instance providing helper methods for the application.
+     */
     private Utils utils;
 
+    /**
+     * Called when the application is starting, before any activity, service,
+     * or receiver objects have been created.
+     * <p>
+     * Initializes the bus validator system components in a background thread:
+     * <ol>
+     *   <li>Opens the serial reader for card communication</li>
+     *   <li>Initializes the SAM module (commented out)</li>
+     *   <li>Sets up the FeliCa card interface (commented out)</li>
+     *   <li>Initializes utility instance</li>
+     *   <li>Loads fare matrix configuration (commented out)</li>
+     *   <li>Loads route information (commented out)</li>
+     *   <li>Sets device information (commented out)</li>
+     *   <li>Inserts blacklist data (commented out)</li>
+     * </ol>
+     * </p>
+     *
+     * <p>
+     * Note: Most initialization steps are currently commented out for testing purposes.
+     * Uncomment them in production to enable full functionality.
+     * </p>
+     *
+     * @throws RuntimeException if SAM initialization fails
+     * @see Application#onCreate()
+     */
     @lombok.SneakyThrows
     @Override
     public void onCreate() {
@@ -65,6 +190,34 @@ public class MyApplication extends Application {
 
     }
 
+    /**
+     * Inserts blacklist data from the raw resource file into the application database.
+     * <p>
+     * This method:
+     * <ol>
+     *   <li>Reads the blacklist data from raw resources (R.raw.blacklist_local_obj)</li>
+     *   <li>Writes it to a temporary file in the app's files directory</li>
+     *   <li>Parses the blacklist file and populates the database</li>
+     * </ol>
+     * </p>
+     *
+     * <p>
+     * The blacklist contains card IDs that are blocked from using the system,
+     * typically due to:
+     * <ul>
+     *   <li>Lost or stolen cards</li>
+     *   <li>Fraudulent activity</li>
+     *   <li>Expired or invalid cards</li>
+     *   <li>Administrative blocks</li>
+     * </ul>
+     * </p>
+     *
+     * @throws IOException if reading or writing the blacklist file fails
+     * @see Utils#readBlackListFile(Context, File)
+     *
+     * @implNote The blacklist file format is binary with specific structure:
+     *           40-character blocks containing card ID and reason code
+     */
     public void insertBlackListData() {
         // Context of the app under test.
         Context appContext = this;

@@ -39,7 +39,7 @@ public enum ServiceCode {
     SECOND_ISSUE("2nd issue(per)","2002","2102"),
     SECOND_ISSUE_ANONYMOUS("2nd issue(anon)","2202","2302"),
     SECOND_ISSUE_CANCEL("2nd issue cancel","9002"),
-    REISSUE("reissue","C101","3101"),
+    REISSUE("reissue","C101","3101","3102","3002"),
     INFO_UPDATE("Information update","A101");
 
 

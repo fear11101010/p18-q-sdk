@@ -18,6 +18,7 @@ public interface BlackListDao {
 
     @Query("SELECT * FROM black_list_data")
     List<BlackListEntity> getAllBlackList();
+
     @Query("DELETE FROM black_list_data")
     void truncateTable();
 

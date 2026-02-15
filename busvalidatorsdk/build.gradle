@@ -31,7 +31,31 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 }
+tasks.register('javadoc', Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
 
+    // Use File.pathSeparator for cross-platform compatibility
+    classpath += files(android.getBootClasspath())
+
+    doFirst {
+        classpath += files(android.libraryVariants.collect { variant ->
+            variant.javaCompileProvider.get().classpath.files
+        })
+    }
+
+    destinationDir = file("${project.buildDir}/outputs/javadoc/")
+    failOnError = false
+
+    options {
+        encoding = 'UTF-8'
+        charSet = 'UTF-8'
+        links "http://docs.oracle.com/javase/8/docs/api/"
+        addStringOption('Xdoclint:none', '-quiet')
+    }
+
+    exclude '**/BuildConfig.java'
+    exclude '**/R.java'
+}
 dependencies {
 
     implementation libs.appcompat

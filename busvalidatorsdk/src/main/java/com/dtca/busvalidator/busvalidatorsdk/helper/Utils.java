@@ -36,33 +36,90 @@ import java.util.Optional;
 import java.util.TimeZone;
 
 import lombok.Getter;
-
+/**
+ * Utility class for the Bus Validator SDK providing various helper methods for:
+ * <ul>
+ *   <li>Byte array and hexadecimal conversions</li>
+ *   <li>Little-endian integer conversions</li>
+ *   <li>Fare calculation and route management</li>
+ *   <li>Card and trip management</li>
+ *   <li>Device serial communication</li>
+ *   <li>Configuration management</li>
+ * </ul>
+ *
+ * This class implements the Singleton pattern to ensure only one instance exists.
+ *
+ * @author DTCA Bus Validator Team
+ * @version 1.0
+ */
 public class Utils {
+    /**
+     * Authentication key used for card validation operations.
+     * This is a 16-byte AES key stored as a byte array.
+     */
     public static final byte[] AUTH_KEY = {0x6C, (byte) 0xF9, (byte) 0xB1, (byte) 0xC8, 0x44, (byte) 0xC2, 0x6D, (byte) 0x9D, (byte) 0xA3, 0x0E, (byte) 0xF0, 0x62, 0x13, (byte) 0xC9, 0x75, (byte) 0xD1};
+    /**
+     * Fare matrix containing route and fare information for the current bus route.
+     */
     public FareMatrix fareMatrix;
+    /**
+     * List of all available routes in the system.
+     */
     public List<Route> routes;
+    /**
+     * Singleton instance of the Utils class.
+     */
     private static Utils utils;
+    /**
+     * List of master configuration settings.
+     */
     private static List<MasterConfig> masterConfigs;
+    /**
+     * Database helper instance for accessing the application database.
+     */
     private static DatabaseHelper appDatabase;
-
+    /**
+     * List of card IDs that have been processed.
+     */
     @Getter
     private List<String> cardList;
-
+    /**
+     * Device information for the current validator hardware.
+     */
     @Getter
     private DeviceInfo deviceInfo;
-
+    /**
+     * Private constructor to enforce Singleton pattern.
+     * Initializes the card list and cache directory.
+     */
     private Utils() {
         cardList = new ArrayList<>();
         File cacheDir = new File("disk_cache");
     }
-
+    /**
+     * Gets the singleton instance of the Utils class.
+     * Creates a new instance if one doesn't exist.
+     *
+     * @return the singleton Utils instance
+     */
     public static synchronized Utils getInstance() {
         if (utils == null) {
             utils = new Utils();
         }
         return utils;
     }
-
+    /**
+     * Converts a byte array to its hexadecimal string representation.
+     *
+     * @param bytes the byte array to convert
+     * @return hexadecimal string representation of the byte array
+     *
+     * @example
+     * <pre>
+     * byte[] bytes = {0x1A, 0x2B, 0x3C};
+     * String hex = byteToHex(bytes); // Returns "1a2b3c"
+     * </pre>
+     */
     public static String byteToHex(byte[] bytes) {
         StringBuilder stringBuilder = new StringBuilder();
         for (byte b : bytes) {
@@ -74,7 +131,19 @@ public class Utils {
         }
         return stringBuilder.toString();
     }
-
+    /**
+     * Converts a hexadecimal string to its byte array representation.
+     *
+     * @param hex the hexadecimal string to convert (must have even length)
+     * @return byte array representation of the hex string
+     * @throws NumberFormatException if the hex string contains invalid characters
+     *
+     * @example
+     * <pre>
+     * String hex = "1a2b3c";
+     * byte[] bytes = hexToByte(hex); // Returns {0x1A, 0x2B, 0x3C}
+     * </pre>
+     */
     public static byte[] hexToByte(@NonNull String hex) {
         byte[] bytes = new byte[hex.length() / 2];
         for (int i = 0; i < hex.length(); i += 2) {
@@ -83,7 +152,20 @@ public class Utils {
         }
         return bytes;
     }
-
+    /**
+     * Converts a byte array to an integer using little-endian byte order.
+     * Handles negative numbers using two's complement representation.
+     *
+     * @param data the byte array to convert
+     * @param len the number of bytes to process (1-4)
+     * @return the integer value in little-endian format
+     *
+     * @example
+     * <pre>
+     * byte[] data = {0x01, 0x02, 0x00, 0x00};
+     * int value = charArrayToIntLE(data, 2); // Returns 513 (0x0201)
+     * </pre>
+     */
     public static int charArrayToIntLE(byte[] data, int len) {
         int result = 0;
 
@@ -111,7 +193,13 @@ public class Utils {
             return byteBuffer.get() ;
         }*/
     }
-
+    /**
+     * Converts an integer to a 4-byte array in little-endian format.
+     * Modifies the provided output array in place.
+     *
+     * @param in the integer value to convert
+     * @param out the output byte array (must be at least 4 bytes)
+     */
     public static void intToCharArrayLE(int in, byte[] out) {
         Arrays.fill(out, (byte) 0x00);
         out[0] = (byte) in;
@@ -122,7 +210,12 @@ public class Utils {
         in = in >> 8;
         out[3] = (byte) in;
     }
-
+    /**
+     * Converts an integer to a 4-byte array in little-endian format.
+     *
+     * @param in the integer value to convert
+     * @return 4-byte array in little-endian format
+     */
     public static byte[] intToCharArrayLE(int in) {
         Log.d("intToCharArrayLE", in + "");
         byte[] out = new byte[4];
@@ -136,6 +229,13 @@ public class Utils {
         out[3] = (byte) in;
         return out;
     }
+    /**
+     * Converts an integer to a byte array of specified length in little-endian format.
+     *
+     * @param input the integer value to convert
+     * @param len the desired length of the output array
+     * @return byte array of specified length in little-endian format
+     */
     public static byte[] intToCharArrayLE(int input,int len) {
         byte[] out = new byte[len];
         out[0] = (byte) input;
@@ -145,6 +245,12 @@ public class Utils {
         }
         return out;
     }
+    /**
+     * Converts a short integer to a 2-byte array in big-endian format.
+     *
+     * @param in the integer value to convert (typically 0-65535)
+     * @return 2-byte array in big-endian format
+     */
     public static byte[] convertShortToCharArray(int in) {
 //        Log.d("intToCharArrayLE", in + "");
         byte[] out = new byte[2];
@@ -153,12 +259,14 @@ public class Utils {
         return out;
     }
 
-    /*public static byte[] convertToTwosComplementLE(int in, int len) {
-        int onesComplement = ~in;
-        int twosComplement = onesComplement + 1;
-        byte[] bytes = intToCharArrayLE(twosComplement);
-        return Arrays.copyOfRange(bytes, 0, Math.min(4, len));
-    }*/
+    /**
+     * Converts an integer to its two's complement representation in little-endian format.
+     * Used for representing negative numbers in binary form.
+     *
+     * @param in the integer value to convert
+     * @param len the desired length of the output array
+     * @return byte array containing two's complement representation
+     */
 
     public static byte[] convertToTwosComplementLE(int in, int len) {
         in = Math.abs(in);
@@ -166,6 +274,12 @@ public class Utils {
         int twosComplement = onesComplement + 1;
         return intToCharArrayLE(twosComplement,len);
     }
+    /**
+     * Reverses the order of elements in a byte array.
+     *
+     * @param array the byte array to reverse
+     * @return new byte array with elements in reversed order
+     */
     public static byte[] reverseArray(byte[] array) {
         byte[] reversed = new byte[array.length];
         for (int i = 0; i < array.length; i++) {
@@ -173,6 +287,14 @@ public class Utils {
         }
         return reversed;
     }
+    /**
+     * Converts a two's complement byte array to an integer.
+     * Handles both positive and negative values.
+     *
+     * @param in the byte array in two's complement format
+     * @param len the number of bytes to process
+     * @return the integer value
+     */
     public static int convertTwosComplementByteArrayToLittleIndian(byte[] in, int len) {
         int value = 0;
         in = reverseArray(in);
@@ -185,7 +307,18 @@ public class Utils {
         }
         return value;
     }
-
+    /**
+     * Gets the current date and time components in binary string format.
+     * Uses Asia/Dhaka timezone.
+     *
+     * @return Map containing binary string representations of year, month, day, hour, and minute
+     *
+     * @example
+     * <pre>
+     * Map&lt;String, String&gt; time = getYearMonthDateHourMinute();
+     * String yearBinary = time.get("year"); // e.g., "0010110" for 2026
+     * </pre>
+     */
     public static Map<String, String> getYearMonthDateHourMinute() {
         Calendar calendar = Calendar.getInstance();
         TimeZone timeZone = TimeZone.getTimeZone("Asia/Dhaka");
@@ -204,7 +337,17 @@ public class Utils {
 
         return map;
     }
-
+    /**
+     * Reads and processes a blacklist file containing blocked card IDs.
+     * Parses the binary file format and stores blacklist entries in the database.
+     *
+     * @param context the Android application context
+     * @param file the blacklist file to read
+     * @throws IOException if file reading fails
+     *
+     * @implNote File format: 40-character blocks where first 16 chars are card ID
+     *           and last 2 chars are the blacklist reason code
+     */
     public static void readBlackListFile(Context context, File file) throws IOException {
         DatabaseHelper helper = DatabaseHelper.getInstance(context.getApplicationContext());
         helper.truncateTable();
@@ -236,31 +379,68 @@ public class Utils {
             helper.insertIntoBlacklistTable(cardId, reason);
         }
     }
-
+    /**
+     * Extracts the service ID from stored log information.
+     * Service ID is composed of classification code and context code.
+     *
+     * @param storedLogInformation the log information containing service details
+     * @return service ID as a 4-character hexadecimal string
+     *
+     * @example
+     * <pre>
+     * String serviceId = getServiceId(logInfo); // Returns "D220"
+     * </pre>
+     */
     public static String getServiceId(StoredLogInformation storedLogInformation) {
         String classificationCode = String.format("%02X", storedLogInformation.getServiceClassificationCode());
         String contextCode = String.format("%02X", storedLogInformation.getContextCode());
         return classificationCode + contextCode;
     }
-
+    /**
+     * Initializes the fare matrix from a JSON string.
+     * The fare matrix contains route information and fare prices between stations.
+     *
+     * @param json JSON string containing fare matrix data
+     */
     public void initializeFareMatrix(String json) {
-//        String json = "{ \"routeId\": 2, \"routeName\": \"HR Transport\", \"isFlatFare\": false, \"isCircular\": true, \"numberOfStoppage\": 10, \"stations\": [{ \"id\": 18, \"stationName\": \"Sonargaon Railway Crossing\", \"stationNameBng\": \"সোনারগাঁও রেল ক্রসিং\", \"stationCode\": \"8C1E\", \"stationOrderNo\": 30, \"lattitude\": null, \"longitude\": null, \"mrouteId\": 2 }, { \"id\": 19, \"stationName\": \"FDC\", \"stationNameBng\": \"এফডিসি\", \"stationCode\": \"8C1C\", \"stationOrderNo\": 28, \"lattitude\": null, \"longitude\": null, \"mrouteId\": 2 }, { \"id\": 20, \"stationName\": \"Bou Bazar\", \"stationNameBng\": \"বউ বাজার\", \"stationCode\": \"8C19\", \"stationOrderNo\": 25, \"lattitude\": null, \"longitude\": null, \"mrouteId\": 2 }, { \"id\": 21, \"stationName\": \"Kuni Para/Happy Homes\", \"stationNameBng\": \"কুনি পাড়া/হ্যাপি হোমস\", \"stationCode\": \"8C16\", \"stationOrderNo\": 22, \"lattitude\": null, \"longitude\": null, \"mrouteId\": 2 }, { \"id\": 22, \"stationName\": \"Police Plaza/Shooting Club\", \"stationNameBng\": \"পুলিশ প্লাজা/শুটিং ক্লাব\", \"stationCode\": \"8C13\", \"stationOrderNo\": 19, \"lattitude\": null, \"longitude\": null, \"mrouteId\": 2 }, { \"id\": 23, \"stationName\": \"Badda\", \"stationNameBng\": \"বাড্ডা\", \"stationCode\": \"8C11\", \"stationOrderNo\": 17, \"lattitude\": null, \"longitude\": null, \"mrouteId\": 2 }, { \"id\": 24, \"stationName\": \"Rampura\", \"stationNameBng\": \"রামপুরা\", \"stationCode\": \"8C10\", \"stationOrderNo\": 16, \"lattitude\": null, \"longitude\": null, \"mrouteId\": 2 }, { \"id\": 25, \"stationName\": \"Mohanagor\", \"stationNameBng\": \"মহানগর\", \"stationCode\": \"8C0D\", \"stationOrderNo\": 13, \"lattitude\": null, \"longitude\": null, \"mrouteId\": 2 }, { \"id\": 26, \"stationName\": \"Modhubag\", \"stationNameBng\": \"মধুবাগ\", \"stationCode\": \"8C0A\", \"stationOrderNo\": 10, \"lattitude\": null, \"longitude\": null, \"mrouteId\": 2 }], \"fareMatrix\": { \"8C1E\": { \"8C1E\": 0, \"8C1C\": 20, \"8C19\": 20, \"8C16\": 20, \"8C13\": 20, \"8C11\": 25, \"8C10\": 25, \"8C0D\": 25, \"8C0A\": 25, \"maxFareUpStream\": 40, \"maxFareDownStream\": 40 }, \"8C1C\": { \"8C1E\": 40, \"8C1C\": 0, \"8C19\": 20, \"8C16\": 20, \"8C13\": 20, \"8C11\": 25, \"8C10\": 25, \"8C0D\": 25, \"8C0A\": 25, \"maxFareUpStream\": 40, \"maxFareDownStream\": 40 }, \"8C19\": { \"8C1E\": 30, \"8C1C\": 30, \"8C19\": 0, \"8C16\": 20, \"8C13\": 20, \"8C11\": 25, \"8C10\": 25, \"8C0D\": 30, \"8C0A\": 30, \"maxFareUpStream\": 40, \"maxFareDownStream\": 40 }, \"8C16\": { \"8C1E\": 30, \"8C1C\": 30, \"8C19\": 40, \"8C16\": 0, \"8C13\": 20, \"8C11\": 20, \"8C10\": 20, \"8C0D\": 25, \"8C0A\": 25, \"maxFareUpStream\": 40, \"maxFareDownStream\": 40 }, \"8C13\": { \"8C1E\": 25, \"8C1C\": 25, \"8C19\": 25, \"8C16\": 25, \"8C13\": 0, \"8C11\": 15, \"8C10\": 15, \"8C0D\": 25, \"8C0A\": 25, \"maxFareUpStream\": 40, \"maxFareDownStream\": 40 }, \"8C11\": { \"8C1E\": 25, \"8C1C\": 25, \"8C19\": 20, \"8C16\": 20, \"8C13\": 20, \"8C11\": 0, \"8C10\": 20, \"8C0D\": 20, \"8C0A\": 20, \"maxFareUpStream\": 40, \"maxFareDownStream\": 40 }, \"8C10\": { \"8C1E\": 25, \"8C1C\": 25, \"8C19\": 20, \"8C16\": 20, \"8C13\": 20, \"8C11\": 40, \"8C10\": 0, \"8C0D\": 20, \"8C0A\": 20, \"maxFareUpStream\": 40, \"maxFareDownStream\": 40 }, \"8C0D\": { \"8C1E\": 20, \"8C1C\": 20, \"8C19\": 25, \"8C16\": 25, \"8C13\": 25, \"8C11\": 25, \"8C10\": 25, \"8C0D\": 0, \"8C0A\": 20, \"maxFareUpStream\": 40, \"maxFareDownStream\": 40 }, \"8C0A\": { \"8C1E\": 15, \"8C1C\": 15, \"8C19\": 20, \"8C16\": 20, \"8C13\": 25, \"8C11\": 25, \"8C10\": 25, \"8C0D\": 40, \"8C0A\": 0, \"maxFareUpStream\": 40, \"maxFareDownStream\": 40 }}}";
         Gson gson = new Gson();
         fareMatrix = gson.fromJson(json, FareMatrix.class);
         System.out.println(fareMatrix.getRouteName());
         System.out.println(fareMatrix.getFareMatrix());
     }
-
+    /**
+     * Initializes the route list from a JSON string.
+     *
+     * @param json JSON string containing list of route data
+     */
     public void initializeRouteList(String json) {
         routes = new Gson().fromJson(json, new TypeToken<List<Route>>() {
         }.getType());
     }
-
+    /**
+     * Converts a byte array to an integer value.
+     * First converts to hexadecimal string, then parses as integer.
+     *
+     * @param bytes the byte array to convert
+     * @return integer value
+     */
     public static int byteToInteger(byte[] bytes) {
         String hex = byteToHex(bytes);
         return Integer.parseInt(hex, 16);
     }
-
+    /**
+     * Converts a byte array to its binary string representation.
+     * Each byte is converted to an 8-bit binary string.
+     *
+     * @param bytes the byte array to convert
+     * @return binary string representation with spaces trimmed
+     *
+     * @example
+     * <pre>
+     * byte[] bytes = {0x0F, (byte)0xFF};
+     * String binary = convertByteArrayToBit(bytes); // Returns "0000111111111111"
+     * </pre>
+     */
     public static String convertByteArrayToBit(byte[] bytes) {
         StringBuilder bitString = new StringBuilder();
         for (byte b : bytes) {
@@ -268,7 +448,13 @@ public class Utils {
         }
         return bitString.toString().trim();
     }
-
+    /**
+     * Converts a byte array to an integer using big-endian byte order.
+     *
+     * @param byteArray the byte array to convert (max 4 bytes)
+     * @return integer value
+     * @throws IllegalArgumentException if byte array is longer than 4 bytes
+     */
     public static int byteArrayToInt(byte[] byteArray) {
         int result = 0;
         int length = byteArray.length;
@@ -283,7 +469,12 @@ public class Utils {
 
         return result;
     }
-
+    /**
+     * Retrieves the device serial number from the hardware.
+     * Uses BasicOper library to communicate with the device.
+     *
+     * @return device serial number as a string, or null if retrieval fails
+     */
     public static String getDeviceSerialNo() {
 
         String[] data = BasicOper.dc_GetDeviceUid().split("\\|");
@@ -292,15 +483,29 @@ public class Utils {
         }
         return null;
     }
-
+    /**
+     * Sets the device information from a JSON string.
+     *
+     * @param json JSON string containing device information
+     */
     public void setDeviceInfo(String json) {
         this.deviceInfo = new Gson().fromJson(json, DeviceInfo.class);
     }
-
+    /**
+     * Clears all entries from the card list.
+     */
     public void clearCardList() {
         this.cardList.clear();
     }
-
+    /**
+     * Calculates the fare for a trip based on stored log information and card ID.
+     * Handles special cases for circular routes and retrieves stored trip data.
+     *
+     * @param storedLogInformation log information containing service and location details
+     * @param idi card ID as byte array
+     * @return fare amount as an integer
+     * @throws RuntimeException if route is not found
+     */
     public Integer getFare(StoredLogInformation storedLogInformation,byte[] idi) {
         String serviceId = String.format("%02X%02X",storedLogInformation.getServiceClassificationCode(), storedLogInformation.getContextCode());
         if(!Arrays.asList("D220","D320").contains(serviceId.toUpperCase())){
@@ -320,6 +525,13 @@ public class Utils {
         }
         return Objects.requireNonNull(Utils.getInstance().fareMatrix.getFareMatrix().get(station1)).get(station2);
     }
+    /**
+     * Calculates the fare for a trip based on stored log information only.
+     *
+     * @param storedLogInformation log information containing origin and destination stations
+     * @return fare amount as an integer
+     * @throws RuntimeException if route is not found
+     */
     public Integer getFare(StoredLogInformation storedLogInformation) {
         String station1 = Utils.byteToHex(storedLogInformation.getPlace1()).toUpperCase();
         String station2 = Utils.byteToHex(storedLogInformation.getPlace2()).toUpperCase();
@@ -332,6 +544,14 @@ public class Utils {
         }
         return Objects.requireNonNull(Utils.getInstance().fareMatrix.getFareMatrix().get(station1)).get(station2);
     }
+    /**
+     * Calculates the fare for a stored trip by card ID.
+     * Retrieves trip information from database and calculates fare.
+     *
+     * @param cardId the card ID to look up
+     * @return fare amount as an integer
+     * @throws RuntimeException if route is not found
+     */
     public Integer getFare(String cardId) {
         TripsEntity entity = appDatabase.getTripsByCardId(cardId);
         String station1 = entity.fromStation;
@@ -345,7 +565,12 @@ public class Utils {
         }
         return Objects.requireNonNull(Utils.getInstance().fareMatrix.getFareMatrix().get(station1)).get(station2);
     }
-
+    /**
+     * Opens and initializes the serial reader for card communication.
+     * Attempts to connect via SPI first, then falls back to UART.
+     *
+     * @return 0 if successful, -2 if connection fails
+     */
     public static int openSerialReader() {
         long st = System.currentTimeMillis();
         String port = "/dev/dc_spi32765.0";
@@ -366,51 +591,116 @@ public class Utils {
 
 
     }
+    /**
+     * Initializes master configuration settings from a JSON string.
+     *
+     * @param json JSON string containing list of master configuration entries
+     */
     public  void initMasterConfig(String json) {
         if(json!=null){
             masterConfigs = new Gson().fromJson(json, new TypeToken<List<MasterConfig>>(){}.getType());
         }
     }
+    /**
+     * Retrieves a master configuration value by name.
+     * Returns default value if configuration is not found.
+     *
+     * @param configName the configuration name enum
+     * @return configuration value as an integer
+     */
     public static int getMasterConfig(MasterConfigName configName) {
         Optional<MasterConfig> config = masterConfigs.stream().filter(c->c.getConfigName().equalsIgnoreCase(configName.getName())).findFirst();
         return config.map(masterConfig -> Integer.parseInt(masterConfig.getValue())).orElse(configName.getValue());
     }
+    /**
+     * Initializes the application database helper.
+     *
+     * @param context the Android application context
+     */
     public static void initAppDatabase(Context context) {
         appDatabase = DatabaseHelper.getInstance(context);
     }
+    /**
+     * Sets the travel direction for a card and creates a new trip record.
+     *
+     * @param cardId the card ID
+     * @param direction the travel direction (UPSTREAM or DOWNSTREAM)
+     */
     public static void setCardDirection(String cardId, RideAndAlight.Direction direction){
 //        appDatabase.insertIntoTripsTable(cardId,direction.name());
         TripsRepository.getInstance(appDatabase.getAppDatabase()).insert(cardId,direction.name());
     }
+    /**
+     * Updates the travel direction for an existing card trip.
+     *
+     * @param cardId the card ID
+     * @param direction the new travel direction
+     */
     public static void updateCardDirection(String cardId, RideAndAlight.Direction direction){
 //        appDatabase.updateTripsTable(cardId,direction.name());
         TripsRepository.getInstance(appDatabase.getAppDatabase()).updateDirection(cardId,direction.name());
     }
+    /**
+     * Updates the origin station for a card's trip.
+     *
+     * @param cardId the card ID
+     * @param station the station code
+     */
     public static void updateFromStation(String cardId, String station){
 //        appDatabase.updateTripsTableFromStation(cardId,station);
         TripsRepository.getInstance(appDatabase.getAppDatabase()).updateFromStation(cardId,station);
     }
+    /**
+     * Updates the destination station for a card's trip.
+     *
+     * @param cardId the card ID
+     * @param station the station code
+     */
     public static void updateToStation(String cardId, String station){
 //        appDatabase.updateTripsTableToStation(cardId,station);
         TripsRepository.getInstance(appDatabase.getAppDatabase()).updateToStation(cardId,station);
     }
+    /**
+     * Updates the cashback amount for a card's trip.
+     *
+     * @param cardId the card ID
+     * @param amount the cashback amount
+     */
     public static void updateCashBackAmount(String cardId, int amount){
 //        appDatabase.updateTripsTableToStation(cardId,station);
         TripsRepository.getInstance(appDatabase.getAppDatabase()).updateCashBackAmount(cardId,amount);
     }
-
+    /**
+     * Deletes a trip record by card ID.
+     *
+     * @param cardId the card ID
+     */
     public static void delete(String cardId){
 //        appDatabase.updateTripsTableToStation(cardId,station);
         TripsRepository.getInstance(appDatabase.getAppDatabase()).deleteByCardId(cardId);
     }
-
+    /**
+     * Truncates the trips table, removing all trip records.
+     */
     public static void truncateTable(){
 //        appDatabase.updateTripsTableToStation(cardId,station);
         TripsRepository.getInstance(appDatabase.getAppDatabase()).truncate();
     }
+    /**
+     * Retrieves trip information by card ID.
+     *
+     * @param cardId the card ID to look up
+     * @return TripsEntity containing trip details, or null if not found
+     */
     public static TripsEntity getTripsByCardId(String cardId){
         return appDatabase.getTripsByCardId(cardId);
     }
+    /**
+     * Updates an existing trip or inserts a new one if it doesn't exist.
+     *
+     * @param cardId the card ID
+     * @param direction the travel direction
+     */
     public static void updateOrInsertTrips(String cardId, RideAndAlight.Direction direction){
         TripsEntity tripsEntity = Utils.getTripsByCardId(cardId);
         if(tripsEntity!=null){
@@ -420,7 +710,18 @@ public class Utils {
             Utils.setCardDirection(cardId,direction);
         }
     }
-
+    /**
+     * Converts a hexadecimal string to its ASCII string representation.
+     *
+     * @param hex the hexadecimal string to convert (pairs of hex digits)
+     * @return ASCII string representation
+     *
+     * @example
+     * <pre>
+     * String hex = "48656C6C6F";
+     * String text = hexToString(hex); // Returns "Hello"
+     * </pre>
+     */
     public static String hexToString(String hex){
         StringBuilder result = new StringBuilder();
 
