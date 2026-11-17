@@ -9,6 +9,30 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+/**
+ * Data model representing a bus route with all its associated information.
+ * <p>
+ * This class contains comprehensive route data including route identification,
+ * station list, fare type, and operational characteristics. It supports both
+ * linear and circular routes with various fare calculation methods.
+ * </p>
+ * 
+ * <h3>Route Types:</h3>
+ * <ul>
+ *   <li><b>Linear Route:</b> Has distinct start and end points</li>
+ *   <li><b>Circular Route:</b> Returns to the starting point</li>
+ * </ul>
+ * 
+ * <h3>Fare Types:</h3>
+ * <ul>
+ *   <li><b>Flat Fare:</b> Single price regardless of distance</li>
+ *   <li><b>Distance-based:</b> Fare calculated based on origin-destination pairs</li>
+ * </ul>
+ * 
+ * @author DTCA Bus Validator SDK
+ * @version 1.0
+ * @since 2025-08-18
+ */
 public class Route {
     private int id;
     private int numberOfRoute;

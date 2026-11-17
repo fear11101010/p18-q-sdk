@@ -12,6 +12,32 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 
+/**
+ * Data model representing personal information stored on a FeliCa transit card.
+ * <p>
+ * This class contains optional personal data about the card holder including
+ * name, contact information, and date of birth. This information is used for
+ * personalized cards and customer service purposes.
+ * </p>
+ * 
+ * <h3>Privacy Note:</h3>
+ * <p>
+ * Personal information is optional and subject to privacy regulations.
+ * Not all cards contain this data. Handle this information in compliance
+ * with applicable data protection laws.
+ * </p>
+ * 
+ * <h3>Data Fields:</h3>
+ * <ul>
+ *   <li>Name: Cardholder's name (up to 48 bytes)</li>
+ *   <li>Phone: Contact number (6 bytes)</li>
+ *   <li>Birthday: Date of birth (2 bytes, encoded)</li>
+ * </ul>
+ * 
+ * @author DTCA Bus Validator SDK
+ * @version 1.0
+ * @since 2025-08-18
+ */
 public class PersonalInfo {
     /**
      * length 48 byte

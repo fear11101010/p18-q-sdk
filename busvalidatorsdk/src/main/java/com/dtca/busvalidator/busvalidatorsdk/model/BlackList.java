@@ -1,6 +1,5 @@
 package com.dtca.busvalidator.busvalidatorsdk.model;
 
-import android.os.Build;
 import android.util.Log;
 
 import com.dtca.busvalidator.busvalidatorsdk.FelicaCard;
@@ -17,6 +16,29 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
+/**
+ * Data model representing blacklist functionality for FeliCa cards in the bus validator system.
+ * <p>
+ * This class manages the blacklist status of transit cards, allowing the system to identify
+ * and handle cards that have been flagged for various reasons such as fraud, expiration,
+ * or administrative holds. It provides read/write operations for blacklist-related data
+ * on the physical FeliCa card.
+ * </p>
+ *
+ * <h3>Key Features:</h3>
+ * <ul>
+ *   <li>Read blacklist status from FeliCa cards</li>
+ *   <li>Write blacklist information to cards</li>
+ *   <li>Manage card attribute information related to blacklisting</li>
+ *   <li>Track blacklist timestamps and reasons</li>
+ * </ul>
+ *
+ * @author DTCA Bus Validator SDK
+ * @version 1.0
+ * @see FelicaCard
+ * @see AttributeInfo
+ * @since 2025-08-25
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -26,19 +48,20 @@ public class BlackList {
     private AttributeInfo attributeInfo;
 
     public BlackList(FelicaCard felicaCard) throws CardReadException {
-        try{
+        try {
             this.felicaCard = felicaCard;
             this.attributeInfo = felicaCard.getFelicaCardDetail().getAttributeInfo();
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new CardReadException("An error occur while reading card. Please try again later.");
         }
     }
-    private void updateAttributeInfo(){
+
+    private void updateAttributeInfo() {
         byte cardControlCode = attributeInfo.getCardControlCode();
         cardControlCode = (byte) (cardControlCode | (1 << 7));
         attributeInfo.setCardControlCode(cardControlCode);
-        int transactionId = Integer.parseInt(Utils.byteToHex(attributeInfo.getTxnDataId()),16)+1;
-        attributeInfo.setTxnDataId(Utils.hexToByte(String.format("%04X",transactionId)));
+        int transactionId = Integer.parseInt(Utils.byteToHex(attributeInfo.getTxnDataId()), 16) + 1;
+        attributeInfo.setTxnDataId(Utils.hexToByte(String.format("%04X", transactionId)));
     }
 
     public void writeData(DataInterface dataInterface) throws CardWriteException {
@@ -59,19 +82,19 @@ public class BlackList {
         blockList[3] = (byte) 0x01;
 
         try {
-            int i = felicaCard.writeInCard(numOfService,serviceCode,numOfBlock,blockList, attributeInfo.getData());
-            if(i!=1) {
-                sendTransactionData(dataInterface,false);
+            int i = felicaCard.writeInCard(numOfService, serviceCode, numOfBlock, blockList, attributeInfo.getData());
+            if (i != 1) {
+                sendTransactionData(dataInterface, false);
                 throw new CardWriteException("An error occur while write in card. Please try again later.");
             }
-            sendTransactionData(dataInterface,true);
+            sendTransactionData(dataInterface, true);
 
         } catch (Exception e) {
             throw new CardWriteException("An error occur while write in card. Please try again later.");
         }
     }
 
-    private void sendTransactionData(@NonNull DataInterface dataInterface, boolean isProcessed){
+    private void sendTransactionData(@NonNull DataInterface dataInterface, boolean isProcessed) {
         FelicaCardDetail felicaCardDetail = felicaCard.getFelicaCardDetail();
         LocalDateTime localDateTime = LocalDateTime.now();
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
@@ -101,7 +124,7 @@ public class BlackList {
                 .cardControlCode(attributeInfo.getCardControlCode() & 0XFF)
                 .discountCode(attributeInfo.getDiscountCode() & 0XFF)
                 .cardExpirationDate(Utils.byteToHex(attributeInfo.getExpiryDate()))
-                .processUnfinishedFlag(isProcessed?0x00:0x01)
+                .processUnfinishedFlag(isProcessed ? 0x00 : 0x01)
                 .deviceSerialNumber(Utils.getDeviceSerialNo())
                 .svLogId(0x0000)
                 .svBalance(0x000000)

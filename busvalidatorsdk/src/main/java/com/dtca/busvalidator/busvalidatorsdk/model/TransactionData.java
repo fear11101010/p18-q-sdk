@@ -12,6 +12,35 @@ import lombok.Value;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+/**
+ * Data model representing complete transaction data for bus validator operations.
+ * <p>
+ * This class aggregates all relevant information about a transaction including
+ * card identification, transaction type, timestamps, amounts, location, and device
+ * information. It serves as a comprehensive record for backend processing,
+ * reporting, and reconciliation.
+ * </p>
+ * 
+ * <h3>Transaction Information:</h3>
+ * <ul>
+ *   <li>Card identification and recycle counter</li>
+ *   <li>Transaction ID and service ID</li>
+ *   <li>Timestamp and location data</li>
+ *   <li>Fare and balance information</li>
+ *   <li>Device serial number</li>
+ *   <li>Card function and control codes</li>
+ * </ul>
+ * 
+ * <h3>Usage:</h3>
+ * <p>
+ * This class is typically used for transmitting transaction data from validator
+ * devices to backend systems for processing, fare settlement, and reporting.
+ * </p>
+ * 
+ * @author DTCA Bus Validator SDK
+ * @version 1.0
+ * @since 2025-08-18
+ */
 public class TransactionData {
     String cardId;
     String recycleCounter;

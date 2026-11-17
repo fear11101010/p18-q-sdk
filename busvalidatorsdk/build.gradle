@@ -31,7 +31,7 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 }
-tasks.register('javadoc', Javadoc) {
+tasks.register('javadoc1', Javadoc) {
     source = android.sourceSets.main.java.srcDirs
 
     // Use File.pathSeparator for cross-platform compatibility
@@ -55,7 +55,136 @@ tasks.register('javadoc', Javadoc) {
 
     exclude '**/BuildConfig.java'
     exclude '**/R.java'
+    exclude '**/*Fragment*.java'
+    exclude '**/*Activity*.java'
 }
+
+tasks.register('javadoc', Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+
+    // Use File.pathSeparator for cross-platform compatibility
+    classpath += files(android.getBootClasspath())
+
+    doFirst {
+        classpath += files(android.libraryVariants.collect { variant ->
+            variant.javaCompileProvider.get().classpath.files
+        })
+    }
+
+    destinationDir = file("${project.buildDir}/outputs/javadoc/")
+    failOnError = false
+
+    options {
+        encoding = 'UTF-8'
+        charSet = 'UTF-8'
+        links "http://docs.oracle.com/javase/8/docs/api/"
+        addStringOption('Xdoclint:none', '-quiet')
+
+        // Use HTML5 output
+        addBooleanOption('html5', true)
+
+        // Disable features that add JavaScript
+        noHelp = true
+        memberLevel = JavadocMemberLevel.PRIVATE
+    }
+
+    exclude '**/BuildConfig.java'
+    exclude '**/R.java'
+    exclude '**/*Fragment*.java'
+    exclude '**/*Activity*.java'
+
+    // Post-process to inline CSS and remove JavaScript
+    doLast {
+        def javadocDir = file("${project.buildDir}/outputs/javadoc/")
+        def styleFile = new File(javadocDir, "stylesheet.css")
+
+        if (styleFile.exists()) {
+            def cssContent = styleFile.text
+
+            // Process all HTML files
+            javadocDir.eachFileRecurse(groovy.io.FileType.FILES) { file ->
+                if (file.name.endsWith('.html')) {
+                    def content = file.text
+
+                    // Remove external CSS link
+                    content = content.replaceAll(/<link\s+rel="stylesheet"\s+[^>]*>/, '')
+
+                    // Remove all script tags (use (?s) for DOTALL mode instead of /s flag)
+                    content = content.replaceAll(/(?s)<script[^>]*>.*?<\/script>/, '')
+                    content = content.replaceAll(/<script[^>]*\/>/, '')
+
+                    // Add inline CSS in head
+                    def styleTag = "<style type=\"text/css\">\n" + cssContent + "\n</style>\n</head>"
+                    content = content.replaceFirst(/<\/head>/, java.util.regex.Matcher.quoteReplacement(styleTag))
+//                    content = content.replaceFirst(/<\/head>/, styleTag)
+
+                    // Remove noscript tags (use (?s) for DOTALL mode)
+                    content = content.replaceAll(/(?s)<noscript>.*?<\/noscript>/, '')
+
+                    file.text = content
+                }
+            }
+
+            // Delete external resource files
+            new File(javadocDir, "script.js")?.delete()
+            new File(javadocDir, "search.js")?.delete()
+            new File(javadocDir, "stylesheet.css")?.delete()
+            new File(javadocDir, "jquery-ui.overrides.css")?.delete()
+
+            // Delete script-dir folder if exists
+            def scriptDir = new File(javadocDir, "script-dir")
+            if (scriptDir.exists()) {
+                scriptDir.deleteDir()
+            }
+
+            // Delete resources folder if exists
+            def resourcesDir = new File(javadocDir, "resources")
+            if (resourcesDir.exists()) {
+                resourcesDir.deleteDir()
+            }
+
+            println "Inlined CSS and removed JavaScript from Javadoc"
+        }
+    }
+}
+
+
+
+
+tasks.register('javadocToDocx') {
+    dependsOn 'javadoc'
+
+    doLast {
+        def javadocDir = file("${project.buildDir}/outputs/javadoc/")
+        def outputFile = file("${project.buildDir}/outputs/Javadoc_Documentation.docx")
+        def scriptFile = file("${project.rootDir}/convert_javadoc_improved.py")
+
+        // Check if script exists
+        if (!scriptFile.exists()) {
+            throw new GradleException("Script not found: ${scriptFile.absolutePath}\nPlease download convert_javadoc_improved.py and place it in your project root directory.")
+        }
+        // Make sure BeautifulSoup is installed
+        exec {
+            commandLine 'python', '-m', 'pip', 'install', 'beautifulsoup4', '--user'
+            ignoreExitValue = true
+        }
+
+        // Run conversion
+        println "Converting Javadoc to DOCX with full details..."
+        exec {
+            commandLine 'python', scriptFile.absolutePath, javadocDir.absolutePath, outputFile.absolutePath
+        }
+
+        println "✓ Complete! Output: ${outputFile}"
+    }
+}
+
+
+
+
+
+
+
 dependencies {
 
     implementation libs.appcompat

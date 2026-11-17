@@ -12,6 +12,24 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+/**
+ * Data model representing a single gate access log entry from a FeliCa card.
+ * <p>
+ * This class stores information about an individual access event at a transit gate,
+ * including the timestamp, status, and location information. The data follows a
+ * fixed binary format for FeliCa card storage.
+ * </p>
+ * 
+ * <h3>Usage:</h3>
+ * <p>
+ * Gate access logs are used to track entry and exit events for fare calculation,
+ * validation, and audit purposes.
+ * </p>
+ * 
+ * @author DTCA Bus Validator SDK
+ * @version 1.0
+ * @since 2025-08-18
+ */
 public class GateAccessLog {
     /**
      * length 2 byte

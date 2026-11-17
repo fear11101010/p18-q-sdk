@@ -12,6 +12,30 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+/**
+ * Data model representing stored value transaction log information from a FeliCa card.
+ * <p>
+ * This class contains detailed information about a single stored value (e-purse)
+ * transaction, including the service type, timestamp, location, balance changes,
+ * and transaction identifiers. The data follows a fixed binary format for
+ * FeliCa card storage.
+ * </p>
+ * 
+ * <h3>Transaction Details:</h3>
+ * <ul>
+ *   <li>Equipment and service classification codes</li>
+ *   <li>Transaction context (entry, exit, reload, etc.)</li>
+ *   <li>Payment method used</li>
+ *   <li>Date and time of transaction</li>
+ *   <li>Location codes (place1, place2)</li>
+ *   <li>Card balance after transaction</li>
+ *   <li>Unique stored value log ID</li>
+ * </ul>
+ * 
+ * @author DTCA Bus Validator SDK
+ * @version 1.0
+ * @since 2025-08-18
+ */
 public class StoredLogInformation {
 
     private byte equipmentClassificationCode; // BIN 1

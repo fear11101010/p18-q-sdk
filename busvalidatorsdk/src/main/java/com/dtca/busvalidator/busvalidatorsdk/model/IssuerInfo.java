@@ -12,6 +12,26 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+/**
+ * Data model representing card issuer information for a FeliCa transit card.
+ * <p>
+ * This class contains data about the organization that issued the card,
+ * including issuer identification codes, initialization data, and dates.
+ * This information is used for card validation and inter-operator settlements.
+ * </p>
+ * 
+ * <h3>Issuer Data:</h3>
+ * <ul>
+ *   <li>Card Issuer ID: Identifies the issuing organization</li>
+ *   <li>Equipment Classification: Type of device used for initialization</li>
+ *   <li>Initializer ID: Specific device that initialized the card</li>
+ *   <li>Issue Date: When the card was first issued</li>
+ * </ul>
+ * 
+ * @author DTCA Bus Validator SDK
+ * @version 1.0
+ * @since 2025-08-18
+ */
 public class IssuerInfo {
     /**
      * length 2 byte

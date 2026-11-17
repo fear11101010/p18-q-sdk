@@ -1146,28 +1146,36 @@ public class Sam {
      * </ol>
      *
      * <p><b>Flow Diagram:</b>
-     * <pre>
-     * FeliCa Card Response
-     *       |
-     *       v
-     * +-------------------+
-     * |  sendBuf[Header+Data]  |
-     * +-------------------+
-     *       |
-     *       v
-     *   transitDataToSam()
-     *       |
-     *       v
-     * +-------------------+
-     * |   SAM Response    |
-     * +-------------------+
-     *       |
-     *       v
-     * Decrypt relevant portion
-     *       |
-     *       v
-     * result & resultLen
-     * </pre>
+     * <p>
+     * <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 750" width="400" height="750">
+     *   <defs>
+     *     <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+     *       <polygon points="0 0, 10 3, 0 6" fill="#333" />
+     *     </marker>
+     *     <style>
+     *       .box { rx: 5; ry: 5; }
+     *       .text { font-family: Arial, sans-serif; font-size: 14px; text-anchor: middle; fill: #000; }
+     *       .arrow { stroke: #333; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+     *     </style>
+     *   </defs>
+     *   <rect x="90" y="20" width="220" height="60" class="box" fill="#e1f5ff" stroke="#01579b" stroke-width="2"/>
+     *   <text x="200" y="55" class="text" font-weight="bold">FeliCa Card Response</text>
+     *   <line x1="200" y1="80" x2="200" y2="110" class="arrow"/>
+     *   <rect x="70" y="110" width="260" height="60" class="box" fill="#fff3e0" stroke="#e65100" stroke-width="2"/>
+     *   <text x="200" y="145" class="text" font-weight="bold">sendBuf[Header+Data]</text>
+     *   <line x1="200" y1="170" x2="200" y2="200" class="arrow"/>
+     *   <rect x="80" y="200" width="240" height="60" class="box" fill="#f3e5f5" stroke="#4a148c" stroke-width="2"/>
+     *   <text x="200" y="235" class="text" font-weight="bold">transitDataToSam()</text>
+     *   <line x1="200" y1="260" x2="200" y2="290" class="arrow"/>
+     *   <rect x="90" y="290" width="220" height="60" class="box" fill="#fff3e0" stroke="#e65100" stroke-width="2"/>
+     *   <text x="200" y="325" class="text" font-weight="bold">SAM Response</text>
+     *   <line x1="200" y1="350" x2="200" y2="380" class="arrow"/>
+     *   <rect x="50" y="380" width="300" height="60" class="box" fill="#e8f5e9" stroke="#1b5e20" stroke-width="2"/>
+     *   <text x="200" y="415" class="text" font-weight="bold">Decrypt relevant portion</text>
+     *   <line x1="200" y1="440" x2="200" y2="470" class="arrow"/>
+     *   <rect x="80" y="470" width="240" height="60" class="box" fill="#fce4ec" stroke="#880e4f" stroke-width="2"/>
+     *   <text x="200" y="505" class="text" font-weight="bold">result &amp; resultLen</text>
+     * </svg>
      *
      * @param felicaResLen Length of the FeliCa response in bytes.
      * @param felicaResponse Byte array containing the FeliCa card response.

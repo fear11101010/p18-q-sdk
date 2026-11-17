@@ -10,6 +10,24 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+/**
+ * Data model representing fare matrix information for bus routes.
+ * <p>
+ * This class contains comprehensive fare calculation data for a specific route,
+ * including station-to-station fare mappings, route characteristics, and pricing information.
+ * It supports both flat fare and distance-based fare systems.
+ * </p>
+ * 
+ * <h3>Fare Calculation Types:</h3>
+ * <ul>
+ *   <li><b>Flat Fare:</b> Single price regardless of distance</li>
+ *   <li><b>Distance-based:</b> Fare varies based on origin and destination stations</li>
+ * </ul>
+ * 
+ * @author DTCA Bus Validator SDK
+ * @version 1.0
+ * @since 2025-08-18
+ */
 public class FareMatrix {
     private int routeId;
     private String routeName;

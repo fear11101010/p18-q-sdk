@@ -9,6 +9,26 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+/**
+ * Data model representing general identification and control information for a FeliCa card.
+ * <p>
+ * This class contains core card identity data including the unique card ID, card type,
+ * recycling counter, and negative value tracking. This information is fundamental
+ * to all card operations.
+ * </p>
+ * 
+ * <h3>Key Fields:</h3>
+ * <ul>
+ *   <li>Card ID: Unique 8-byte identifier</li>
+ *   <li>Recycle Counter: Tracks card reuse/replacement cycles</li>
+ *   <li>Card Type: Indicates card category (adult, student, senior, etc.)</li>
+ *   <li>Negative Value: Outstanding debt or pending charges</li>
+ * </ul>
+ * 
+ * @author DTCA Bus Validator SDK
+ * @version 1.0
+ * @since 2025-08-18
+ */
 public class GeneralInfo {
     /**
      * length 8 byte

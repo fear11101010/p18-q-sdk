@@ -12,6 +12,30 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+/**
+ * Data model representing gate access log information specifically for transfer scenarios.
+ * <p>
+ * This class handles the more complex case of multi-leg journeys involving transfers
+ * between different routes or operators. It uses a two-block structure to store
+ * information about both the initial ride and the transfer ride.
+ * </p>
+ * 
+ * <h3>Structure:</h3>
+ * <ul>
+ *   <li><b>Block 0:</b> First ride information (origin, destination, fare)</li>
+ *   <li><b>Block 1:</b> Transfer ride information (connection details, combined fare)</li>
+ * </ul>
+ * 
+ * <h3>Transfer Handling:</h3>
+ * <p>
+ * This structure enables proper fare calculation for connected journeys,
+ * including transfer discounts and time-limited transfer windows.
+ * </p>
+ * 
+ * @author DTCA Bus Validator SDK
+ * @version 1.0
+ * @since 2025-08-18
+ */
 public class GateAccessLogInformationForTransfer {
 
     private Block0 block0;

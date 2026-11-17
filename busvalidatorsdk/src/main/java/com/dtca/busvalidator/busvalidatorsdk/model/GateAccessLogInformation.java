@@ -12,6 +12,27 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+/**
+ * Data model representing detailed gate access log information from a FeliCa card.
+ * <p>
+ * This class extends the basic gate access log with additional details about the
+ * access event, including more detailed status flags, operator codes, device information,
+ * and balance updates. The data follows a multi-byte binary format.
+ * </p>
+ * 
+ * <h3>Key Information:</h3>
+ * <ul>
+ *   <li>Detailed status flags</li>
+ *   <li>Precise timestamp (date and time)</li>
+ *   <li>Location (station/stop codes)</li>
+ *   <li>Operator and equipment information</li>
+ *   <li>Balance before and after transaction</li>
+ * </ul>
+ * 
+ * @author DTCA Bus Validator SDK
+ * @version 1.0
+ * @since 2025-08-18
+ */
 public class GateAccessLogInformation {
     /**
      * length 2 byte

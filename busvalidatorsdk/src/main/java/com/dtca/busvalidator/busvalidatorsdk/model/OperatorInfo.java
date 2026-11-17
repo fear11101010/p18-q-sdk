@@ -12,6 +12,26 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+/**
+ * Data model representing transit operator information from a FeliCa card transaction.
+ * <p>
+ * This class stores details about the transit operator and location where a
+ * transaction occurred. It links transactions to specific operators, equipment,
+ * and physical locations within the transit network.
+ * </p>
+ * 
+ * <h3>Operator Data:</h3>
+ * <ul>
+ *   <li>Operator Code: Identifies the transit company</li>
+ *   <li>Equipment Class: Type of validator device</li>
+ *   <li>Station Code: Physical location identifier</li>
+ *   <li>Service Classification: Type of service (bus, rail, etc.)</li>
+ * </ul>
+ * 
+ * @author DTCA Bus Validator SDK
+ * @version 1.0
+ * @since 2025-08-18
+ */
 public class OperatorInfo {
     /**
      * length 2 byte
